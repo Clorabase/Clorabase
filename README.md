@@ -16,8 +16,21 @@ which hardly requires online database and other android backend features. Althou
 
 
 ### Implimentation
-
-
+In your project **build.gradle**
+```
+allprojects {
+		repositories {
+			...
+			maven { url 'https://jitpack.io' }
+		}
+	}
+```
+In module **build.gradle**
+```
+	dependencies {
+	        implementation 'com.github.ErrorxCode:Clorabase:1.0-alpha'
+	}
+```
 
 ### When to use this instead of firebase
 Clorabase is made for apps that hardly or rearely communicates to the backend. Apps which rely totally on backend-database should not use this, instead they must go for [firebase](https://firebase.google.com/) because clorabase only offers 10MB of data to be stored in database. If your app is native application and only store some data on database then you should consider using this. See the table below to understand more crearly.
