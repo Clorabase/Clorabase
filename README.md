@@ -48,8 +48,4 @@ Clorabase is made for apps that hardly or rearely communicates to the backend. A
 
 
 ## Documentation
-
-
-
-#### Example project
-[Clorabase start-up]()
+[Guide](https://errorxcode.github.io/docs/clorabase/index.html)
