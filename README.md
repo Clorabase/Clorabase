@@ -1,6 +1,12 @@
 # Clorabase
 > A account-free backend for android apps.
 
+## BETA TESTING
+**This is currently in beta testing and does not represent final quality. You may find bugs,crashes or other issues. Please report it to us.**
+To participate in beta testing, email us at [inboxrahil@xcoder.tk]() or DM [@x__coder__x](https://www.instagram.com/x__coder__x/) on instagram.
+We will put your name in beta contributors and testers.
+
+**NOTE :** You will get console after you request for testing.
 
 
 ### What it is
@@ -9,7 +15,7 @@ which hardly requires online database and other android backend features. Althou
 
 ### Features
 - No account needed
-- Much usage quota than others.
+- Unlimited usage and quota (Dedicated server)
 - Easy,Simple and lightweight
 - Free, No paid plans
 - Almost all engage features
@@ -28,7 +34,7 @@ allprojects {
 In module **build.gradle**
 ```
 	dependencies {
-	        implementation 'com.github.ErrorxCode:Clorabase:1.0-alpha'
+	        implementation 'com.github.ErrorxCode:Clorabase:v1.5-beta-3'
 	}
 ```
 
@@ -37,8 +43,8 @@ Clorabase is made for apps that hardly or rearely communicates to the backend. A
 
 | Usage                     | Clorabase | Firebase |
 | -----------               |-----------|----------|
-| Large storage (>1GB)       | Yes       | No      |
-| Large data (>10MB)         | No        | Yes      |
+| Large storage (>10GB)       | Yes       | No      |
+| Large data (>5GB)         | Yes        | No      |
 | Unlimited push notification| Yes        | No      |
 | Advance messaging         | No        | Yes      |
 | Easy In-App messaging      | Yes        | No      |
