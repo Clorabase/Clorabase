@@ -1,24 +1,20 @@
 # Clorabase
 > A account-free backend for android apps.
 
-## BETA TESTING
-**This is currently in beta testing and does not represent final quality. You may find bugs,crashes or other issues. Please report it to us.**
-To participate in beta testing, email us at [inboxrahil@xcoder.tk]() or DM [@x__coder__x](https://www.instagram.com/x__coder__x/) on instagram.
-We will put your name in beta contributors and testers.
-
-**NOTE :** You will get console after you request for testing.
 
 
 ### What it is
-Clorabase is a free and backend alternative for android apps. Clorabase is mostly made for apps
-which hardly requires online database and other android backend features. Although, this can also be used for the hybrid apps which often uses database and other features but considering firebase for that will be more beneficial. As the limits or quota are based on the assumption that the app will not fully depend on the server. The biggest advantage of using this instead of firebase for small apps is that you don't have to build an account in order to use clorabase. Yes, this service does not need account.
+Clorabase is a free and backend alternative for android apps. Clorabase is mostly made for apps which don't read or write data everytime, instead they syncs the local database with the server rearly. Like firebase, clorabase also sync data in realtime but with different approch. It uses [CloremDB](https://github.com/ErrorxCode/Clorem) as its database. User read & write on its local database and can sync it with the server whenever he/she wants. If the app depends totally on the data in the database, basically if the data is changed in the database by other user and you are dependent on that data then you can always get the data from database while initializing, else it is also recommanded to fetch data only when needed.
 
 ### Features
 - No account needed
-- Unlimited usage and quota (Dedicated server)
-- Easy,Simple and lightweight
-- Free, No paid plans
-- Almost all engage features
+- Unlimited usage & quota
+- Absolutly Free, No paid plans
+- Online database
+- In-app messging
+- In-app updates
+- Cloud storage for apps
+- Push messaging
 
 
 ### Implimentation
@@ -38,20 +34,27 @@ In module **build.gradle**
 	}
 ```
 
+
 ### When to use this instead of firebase
-Clorabase is made for apps that hardly or rearely communicates to the backend. Apps which rely totally on backend-database should not use this, instead they must go for [firebase](https://firebase.google.com/) because clorabase only offers 10MB of data to be stored in database. If your app is native application and only store some data on database then you should consider using this. See the table below to understand more crearly.
+Clorabase and firebase are two most popular SaaS for android apps. One can deside what to use ant at what time through the below table.
 
 | Usage                     | Clorabase | Firebase |
 | -----------               |-----------|----------|
 | Large storage (>10GB)       | Yes       | No      |
-| Large data (>5GB)         | Yes        | No      |
+| Large database (>1GB)         | Yes        | No      |
 | Unlimited push notification| Yes        | No      |
 | Advance messaging         | No        | Yes      |
-| Easy In-App messaging      | Yes        | No      |
+| Simple In-App messaging      | Yes        | No      |
 | In-app update             | Yes        | Absent   |
 | Authentication             | Absent | Yes|
 
 
+#### Example project
+[Clorabase start-up]()
 
-## Documentation
-[Guide](https://errorxcode.github.io/docs/clorabase/index.html)
+## BETA TESTING
+**This is currently in beta testing and does not represent final quality. You may find bugs,crashes or other issues. Please report it to us.**
+To participate in beta testing, email us at [inboxrahil@xcoder.tk]() or DM [@x__coder__x](https://www.instagram.com/x__coder__x/) on instagram.
+We will put your name in beta contributors and testers.
+
+**NOTE :** You will get console after you request for testing.
