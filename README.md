@@ -18,6 +18,7 @@ Clorabase is a free and backend alternative for android apps. Clorabase is mostl
 
 
 ### Implimentation
+#### To add SDK
 In your project **build.gradle**
 ```
 allprojects {
@@ -34,6 +35,8 @@ In module **build.gradle**
 	}
 ```
 
+#### To get console
+Goto latest release and download "Clorabase-beta.apk" from the assets.
 
 ### When to use this instead of firebase
 Clorabase and firebase are two most popular SaaS for android apps. One can deside what to use ant at what time through the below table.
