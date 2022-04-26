@@ -31,12 +31,12 @@ allprojects {
 In module **build.gradle**
 ```
 	dependencies {
-	        implementation 'com.github.ErrorxCode:Clorabase:v1.5-beta-3'
+	               implementation 'com.github.ErrorxCode:Clorabase:v1.6-beta-4'
 	}
 ```
 
-#### To get console
-Goto latest release and download "Clorabase-beta.apk" from the assets.
+### Documentation
+- [User guide](https://docs.clorabase.tk)
 
 ### When to use this instead of firebase
 See the table below to campare clorabase and firebase with their features.
