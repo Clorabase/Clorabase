@@ -4,13 +4,13 @@
 
 
 ### What it is
-Clorabase is a free and backend alternative for android apps. Clorabase is mostly made for apps which don't read or write data everytime, instead they syncs the local database with the server rearly. Like firebase, clorabase also sync data in realtime but with different approch. It uses [CloremDB](https://github.com/ErrorxCode/Clorem) as its database. User read & write on its local database and can sync it with the server whenever he/she wants. If the app depends totally on the data in the database, basically if the data is changed in the database by other user and you are dependent on that data then you can always get the data from database while initializing, else it is also recommanded to fetch data only when needed.
+Clorabase is a free and backend alternative (BaaS) for android apps. Clorabase is mostly made for small apps which has small backend/server/database requirement. If your app scale large or you need more database storage or bandwidth, clorabase may not serve you. You should consider using [Firebase](https://firebase.google.com). Clorabase AIMS to provide a money-free production ready backend for building android apps as hobby or start-up. It is for those who don't earn money from their apps and build apps just for learning or non-profit use.
 
 ### Features
 - No account needed
 - Unlimited usage & quota
 - Absolutly Free, No paid plans
-- Online database
+- Serverless database
 - In-app messging
 - In-app updates
 - Cloud storage for apps
@@ -39,18 +39,18 @@ In module **build.gradle**
 Goto latest release and download "Clorabase-beta.apk" from the assets.
 
 ### When to use this instead of firebase
-Clorabase and firebase are two most popular SaaS for android apps. One can deside what to use ant at what time through the below table.
+See the table below to campare clorabase and firebase with their features.
 
 | Usage                     | Clorabase | Firebase |
 | -----------               |-----------|----------|
 | Large storage (>10GB)       | Yes       | No      |
-| Large database (>1GB)         | Yes        | No      |
+| Large database (>512MB)         | No        | Yes      |
 | Unlimited push notification| Yes        | No      |
-| Advance messaging         | No        | Yes      |
-| Simple In-App messaging      | Yes        | No      |
+| In-app messaging         | No        | Yes      |
 | In-app update             | Yes        | Absent   |
 | Authentication             | Absent | Yes|
 
+The rule of thumb is, if you’re building a small project or dedicated mobile application, and you don’t mind the high bandwidth or database storage, Clorabase is a great place to start. If you’re looking for a more general-purpose data solution, value performance at scale and advanced querying, Firebase is going to serve your needs best.
 
 #### Example project
 [Clorabase start-up]()
