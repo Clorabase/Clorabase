@@ -80,58 +80,43 @@ public class PushFragment extends Fragment {
                 }
             }
         });
-        binding.send.setOnClickListener(new View.OnClickListener() {
-            @SuppressLint("DefaultLocale")
-            @Override
-            public void onClick(View v) {
-                StrictMode.setThreadPolicy(new StrictMode.ThreadPolicy.Builder().permitNetwork().build());
-                if (!isInternetOn()){
-                    Toast.makeText(getContext(),"Check your internet connection",Toast.LENGTH_LONG).show();
-                }
-                try {
-                    JSONObject json = new JSONObject();
-                    json.put("app_id","eb9c7891-3211-4a18-9317-6316897e837f");
-                    json.put("isAndroid",true);
-                    json.put("channel_for_external_user_ids","push");
-                    json.put("include_external_user_ids",new JSONArray(String.format("[\"%s\"]",binding.packageName.getText().toString())));
-                    json.put("headings",new JSONObject().put("en",binding.title.getText().toString()));
-                    json.put("contents",new JSONObject().put("en",binding.message.getText().toString()));
-                    System.out.println(json.toString(4));
-                    if (binding.spinner.getHint().toString().contains("Url")){
-                        if (binding.action.getText().toString().contains("https://")){
-                            json.put("app_url",binding.action.getText().toString());
-                        } else {
-                            binding.action.setError("URL must start with 'http://' or 'https://'");
-                            return;
-                        }
+        binding.send.setOnClickListener(v -> {
+            try {
+                JSONObject json = new JSONObject();
+                json.put("app_id","eb9c7891-3211-4a18-9317-6316897e837f");
+                json.put("isAndroid",true);
+                json.put("channel_for_external_user_ids","push");
+                json.put("include_external_user_ids",new JSONArray(String.format("[\"%s\"]",binding.packageName.getText().toString())));
+                json.put("headings",new JSONObject().put("en",binding.title.getText().toString()));
+                json.put("contents",new JSONObject().put("en",binding.message.getText().toString()));
+                if (binding.spinner.getHint().toString().contains("Url")){
+                    if (binding.action.getText().toString().contains("https://")){
+                        json.put("app_url",binding.action.getText().toString());
+                    } else {
+                        binding.action.setError("URL must start with 'http://' or 'https://'");
+                        return;
                     }
-                    System.out.println(json.toString(4));
-                    URL url = new URL("https://onesignal.com/api/v1/notifications");
-                    HttpURLConnection con = (HttpURLConnection)url.openConnection();
-                    con.setUseCaches(false);
-                    con.setDoOutput(true);
-                    con.setDoInput(true);
-                    con.setRequestProperty("Content-Type", "application/json; charset=UTF-8");
-                    con.setRequestProperty("Authorization", "Basic MjZlYTYwMTctOGU0ZC00ZWU2LTkxNzctZjA4OTk1MmU4OTdm");
-                    con.setRequestMethod("POST");
-                    con.getOutputStream().write(json.toString().getBytes());
-
-                    if (con.getResponseCode() == 200)
-                        Snackbar.make(binding.getRoot(),"Push notification sent !",Snackbar.LENGTH_SHORT).show();
-                    else
-                        Toast.makeText(getContext(), "Push not sent, Error " + con.getResponseMessage(), Toast.LENGTH_LONG).show();
-                } catch (JSONException | IOException e) {
-                    e.printStackTrace();
-                    Toast.makeText(getContext(), "An IO exception occured", Toast.LENGTH_SHORT).show();
                 }
+                URL url = new URL("https://onesignal.com/api/v1/notifications");
+                HttpURLConnection con = (HttpURLConnection)url.openConnection();
+                con.setUseCaches(false);
+                con.setDoOutput(true);
+                con.setDoInput(true);
+                con.setRequestProperty("Content-Type", "application/json; charset=UTF-8");
+                con.setRequestProperty("Authorization", "Basic MjZlYTYwMTctOGU0ZC00ZWU2LTkxNzctZjA4OTk1MmU4OTdm");
+                con.setRequestMethod("POST");
+                con.getOutputStream().write(json.toString().getBytes());
 
+                if (con.getResponseCode() == 200)
+                    Snackbar.make(binding.getRoot(),"Push notification sent !",Snackbar.LENGTH_SHORT).show();
+                else
+                    Toast.makeText(getContext(), "Push not sent, Error " + con.getResponseMessage(), Toast.LENGTH_LONG).show();
+            } catch (JSONException | IOException e) {
+                e.printStackTrace();
+                Toast.makeText(getContext(), "An IO exception occurred", Toast.LENGTH_SHORT).show();
             }
+
         });
         return binding.getRoot();
-    }
-
-    private boolean isInternetOn(){
-        ConnectivityManager manager = getContext().getSystemService(ConnectivityManager.class);
-        return manager.getActiveNetworkInfo().isConnected();
     }
 }

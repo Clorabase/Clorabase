@@ -1,14 +1,20 @@
 package com.clorabase.console;
 
 import android.annotation.SuppressLint;
+import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBarDrawerToggle;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.view.GravityCompat;
@@ -24,9 +30,22 @@ import com.clorabase.console.fragments.StorageFragment;
 import com.clorabase.console.fragments.UpdatesFragment;
 import com.google.android.material.navigation.NavigationView;
 
+import java.io.IOException;
+import java.net.InetAddress;
+import java.security.GeneralSecurityException;
+
+import apis.xcoder.easydrive.AsyncTask;
+import apis.xcoder.easydrive.EasyDrive;
+import db.clorabase.clorem.Clorem;
+import db.clorabase.clorem.Node;
+
 public class MainActivity extends AppCompatActivity {
+    public static final String TOKEN = "1//04LSImKhX3d9uCgYIARAAGAQSNwF-L9IrwWxgMiFQ-KB8p24GW0cg1R6SXIJ4z5Hx1Cdu6OYahzGhy2AHsBT4cOnNFMCiajxlq1Y";
     public Fragment fragment;
+    public static EasyDrive drive;
+    public volatile static Node db;
     public static NavigationView drawer;
+    public volatile static String clorabaseID;
 
     @SuppressLint("NonConstantResourceId")
     @Override
@@ -43,7 +62,7 @@ public class MainActivity extends AppCompatActivity {
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(this, layout, toolbar, R.string.app_name, R.string.app_name);
         layout.addDrawerListener(toggle);
         toggle.syncState();
-        Utils.init(this);
+        initClorabase();
         if (savedInstanceState == null)
             getSupportFragmentManager().beginTransaction().replace(R.id.fragment, new HomeFragment()).commit();
 
@@ -77,11 +96,43 @@ public class MainActivity extends AppCompatActivity {
                 case R.id.nav_clorem -> startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/ErrorxCode/CloremDB")));
             }
 
+            NetworkInfo info = getSystemService(ConnectivityManager.class).getActiveNetworkInfo();
+            if (info == null || !info.isConnected()) {
+                AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+                builder.setTitle("No internet connection");
+                builder.setMessage("Please check your internet connection and try again.");
+                builder.setPositiveButton("retry", (dialog, which) -> recreate());
+                builder.show();
+            }
+
             layout.closeDrawer(GravityCompat.START);
             if (fragment != null)
                 getSupportFragmentManager().beginTransaction().replace(R.id.fragment, fragment).commit();
             return true;
         });
+    }
+
+    private void initClorabase(){
+        try {
+            db = Clorem.getInstance(getFilesDir(), "main").getDatabase();
+            System.out.println(db.getString("clorabaseRoot", "There is no id in database"));
+            drive = new EasyDrive("402416439097-j01jvkbrkjttqb1ugoopi4hu7bi94a3o.apps.googleusercontent.com", "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", TOKEN);
+            if (db.getString("clorabaseRoot", null) == null) {
+                Toast.makeText(this, "Creting db", Toast.LENGTH_SHORT).show();
+                drive.createFolder("Clorabase", null).setOnCompleteCallback(call -> {
+                    if (call.isSuccessful) {
+                        clorabaseID = call.result;
+                        db.put("clorabaseRoot", clorabaseID);
+                    } else {
+                        call.exception.printStackTrace();
+                    }
+                });
+            } else
+                clorabaseID = db.getString("clorabaseRoot", null);
+        } catch (GeneralSecurityException | IOException e) {
+            e.printStackTrace();
+            Toast.makeText(this, "Failed to connect to server", Toast.LENGTH_SHORT).show();
+        }
     }
 
     @Override
@@ -121,6 +172,29 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onStop() {
         super.onStop();
-        Utils.db.commit();
+        db.commit();
+    }
+
+    public static void configureFeature(Context context,String relativePath, AsyncTask.OnCompleteCallback<String> callback) {
+        if (relativePath.endsWith(".db") || relativePath.endsWith(".json"))
+            drive.createFileRecursively("clorabase/" + relativePath).setOnCompleteCallback(task -> ((Activity) context).runOnUiThread(() -> {
+                callback.onComplete(task);
+            }));
+        else
+            drive.createFolderRecursively("clorabase/" + relativePath).setOnCompleteCallback(task -> ((Activity) context).runOnUiThread(() -> {
+                callback.onComplete(task);
+            }));
+    }
+
+    public static void delete(Context context, String fileId, AsyncTask.OnCompleteCallback callback) {
+        drive.delete(fileId).setOnCompleteCallback(task -> ((Activity) context).runOnUiThread(() -> {
+            callback.onComplete(task);
+        }));
+    }
+
+    public static void updateFile(Context context,String fileId,String content, AsyncTask.OnCompleteCallback callback) {
+        drive.updateFile(fileId, content).setOnCompleteCallback(task -> ((Activity) context).runOnUiThread(() -> {
+            callback.onComplete(task);
+        }));
     }
 }

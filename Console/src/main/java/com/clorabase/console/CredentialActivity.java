@@ -15,6 +15,8 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.clorabase.console.databinding.ActivityCredentialBinding;
 
+import apis.xcoder.easydrive.AsyncTask;
+
 public class CredentialActivity extends AppCompatActivity {
 
     @Override
@@ -34,20 +36,28 @@ public class CredentialActivity extends AppCompatActivity {
                     if (packageName.isEmpty()) {
                         Toast.makeText(this, "Please enter a package name", Toast.LENGTH_SHORT).show();
                     } else {
-                        String project = Utils.getFileId(packageName,Utils.clorabaseID);
-                        if (project == null) {
-                            Toast.makeText(this, "No project found for the package " + packageName, Toast.LENGTH_LONG).show();
-                        } else {
-                            String storage = Utils.getFileId("Storage",project);
-                            if (storage == null) {
-                                Toast.makeText(this, "No storage found for the project " + project, Toast.LENGTH_LONG).show();
-                                binding.storage.setText("STORAGE_BUCKET_NOT_CONFIGURED");
-                                binding.storage.setTextColor(Color.RED);
+                        try {
+                            String project = AsyncTask.await(MainActivity.drive.getFileId(packageName,MainActivity.clorabaseID),5);
+                            if (project == null) {
+                                Toast.makeText(this, "No project found for the package " + packageName, Toast.LENGTH_LONG).show();
                             } else {
-                                binding.storage.setText(storage);
+                                var storage = AsyncTask.await(MainActivity.drive.getFileId("Storage",project),5);
+                                var updates = AsyncTask.await(MainActivity.drive.getFileId("versions.json",project),5);
+                                var messaging = AsyncTask.await(MainActivity.drive.getFileId("messaging.json",project),5);
+                                var database = AsyncTask.await(MainActivity.drive.getFileId("clorabase.db",project),5);
+                                if (storage != null)
+                                    binding.storage.setText(storage);
+                                if (database != null)
+                                    binding.database.setText(database);
+                                if (messaging != null)
+                                    binding.messaging.setText(messaging);
+                                if (updates != null)
+                                    binding.updates.setText(updates);
+
+                                binding.token.setText(MainActivity.TOKEN);
                             }
-                            binding.token.setText(Utils.TOKEN);
-                            binding.project.setText(project);
+                        } catch (Exception e) {
+                            e.printStackTrace();
                         }
                     }
                 }).setNegativeButton("Cancel", (x,y) -> finish()).show();

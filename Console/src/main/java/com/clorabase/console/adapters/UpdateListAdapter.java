@@ -12,7 +12,7 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AlertDialog;
 
-import com.clorabase.console.Utils;
+import com.clorabase.console.MainActivity;
 import com.clorabase.console.databinding.ListUpdatesBinding;
 import com.clorabase.console.fragments.UpdatesFragment;
 
@@ -55,7 +55,7 @@ public class UpdateListAdapter extends BaseAdapter {
         binding.link.setText(links.get(position));
         binding.version.setText(versions.get(position));
 
-        binding.delete.setOnClickListener(v -> Utils.helper.deleteFolderFile(UpdatesFragment.ids.get(position)).addOnFailureListener(e -> Toast.makeText(context, e.getMessage(), Toast.LENGTH_SHORT).show()));
+        binding.delete.setOnClickListener(v -> MainActivity.drive.delete(UpdatesFragment.ids.get(position)).setOnErrorCallback(e -> Toast.makeText(context, e.getMessage(), Toast.LENGTH_SHORT).show()));
         binding.update.setOnClickListener(v -> {
             EditText editText = new EditText(context);
             editText.setSingleLine(true);
@@ -69,26 +69,24 @@ public class UpdateListAdapter extends BaseAdapter {
                     .setMessage("Enter the new (latest) version code of your app.")
                     .setPositiveButton("ok", (dialog, which) -> {
                         int code = Integer.parseInt(editText.getText().toString());
-                        Utils.helper.readFile(UpdatesFragment.ids.get(position)).addOnSuccessListener(pair -> {
+                        MainActivity.drive.getContent(UpdatesFragment.ids.get(position)).setOnSuccessCallback(bytes -> {
                             try {
-                                JSONObject json = new JSONObject(pair.second);
+                                JSONObject json = new JSONObject(new String(bytes));
                                 json.put("versionCode", code);
                                 json.put("name", names.get(position));
                                 json.put("mode", "flexible");
                                 json.put("link", links.get(position));
-                                Utils.updateFile(UpdatesFragment.ids.get(position),json.toString()).addOnCompleteListener(task -> {
-                                    if (task.isSuccessful()) {
-                                        Toast.makeText(context, "Successfully incremented", Toast.LENGTH_SHORT).show();
-                                        versions.set(position, String.valueOf(code));
-                                        notifyDataSetChanged();
-                                    } else {
-                                        Toast.makeText(context, task.getException().getMessage(), Toast.LENGTH_SHORT).show();
-                                    }
+
+                                MainActivity.updateFile(context, UpdatesFragment.ids.get(position), json.toString(), call -> {
+                                    if (call.isSuccessful)
+                                        Toast.makeText(context, "version incremented", Toast.LENGTH_SHORT).show();
+                                    else
+                                        Toast.makeText(context, "error incrementing version", Toast.LENGTH_SHORT).show();
                                 });
                             } catch (JSONException e) {
-                                Toast.makeText(context, e.getMessage(), Toast.LENGTH_SHORT).show();
+                                e.printStackTrace();
                             }
-                        }).addOnFailureListener(e -> Toast.makeText(context, e.getMessage(), Toast.LENGTH_SHORT).show());
+                        }).setOnErrorCallback(e -> Toast.makeText(context, e.getMessage(), Toast.LENGTH_SHORT).show());
                     }).setNegativeButton("cancel", null).show();
         });
         return binding.getRoot();

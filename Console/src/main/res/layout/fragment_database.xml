@@ -9,9 +9,8 @@
     <ListView
         android:id="@+id/apps_list"
         android:layout_width="match_parent"
-        android:tooltipText="This list shows no. of document in your app's node"
-        android:layout_height="match_parent">
-    </ListView>
+        android:layout_height="match_parent"
+        android:tooltipText="This list shows no. of document in your app's node"></ListView>
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/add"

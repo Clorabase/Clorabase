@@ -6,7 +6,10 @@ import android.app.ProgressDialog;
 import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
+import android.provider.DocumentsContract;
+import android.provider.MediaStore;
 import android.provider.OpenableColumns;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -18,19 +21,19 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.provider.DocumentsContractCompat;
 import androidx.fragment.app.Fragment;
 
-import com.ammarptn.gdriverest.GoogleDriveFileHolder;
+import com.clorabase.console.MainActivity;
 import com.clorabase.console.R;
-import com.clorabase.console.Utils;
 import com.clorabase.console.adapters.StorageListAdapter;
 import com.clorabase.console.databinding.DialogAddCommonBinding;
 import com.clorabase.console.databinding.FragmentStorageBinding;
-import com.clorem.db.Node;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.snackbar.BaseTransientBottomBar;
 import com.google.android.material.snackbar.Snackbar;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -38,11 +41,16 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import apis.xcoder.easydrive.AsyncTask;
+import apis.xcoder.easydrive.EasyDrive;
+import apis.xcoder.easydrive.FileMetadata;
+import db.clorabase.clorem.Node;
+
 public class StorageFragment extends Fragment implements View.OnClickListener {
     private FragmentStorageBinding binding;
     private StorageListAdapter listAdapter;
     private ArrayAdapter<String> spinnerAdapter;
-    private final Map<String, String> map = new HashMap<>();
+    private Map<String, String> map;
     private List<String> files;
     private final List<String> packages = new ArrayList<>();
     private List<String> fileIds;
@@ -50,22 +58,21 @@ public class StorageFragment extends Fragment implements View.OnClickListener {
     private Node db;
     private Node spinnerNode;
     private long size;
+    private String currentApp;
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         binding = FragmentStorageBinding.inflate(inflater);
-        db = Utils.db.node("Storage");
+        db = MainActivity.db.node("Storage");
         spinnerNode = db.node("spinner");
         fileIds = db.getListString("ids");
         files = db.getListString("names");
-        sizes = db.getListInt("sizes");
-        for (String app : spinnerNode.getChildren()) {
-            map.put(app, spinnerNode.getString(app, null));
-            packages.add(app);
-        }
-        listAdapter = new StorageListAdapter(requireContext(), files, fileIds, sizes);
-        spinnerAdapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_spinner_dropdown_item, packages);
+        sizes = (List) db.getListInt("sizes");
+        map = spinnerNode.getData() == null ? new HashMap<>(0) : (Map) spinnerNode.getData();
+        packages.addAll(map.keySet());
 
+        listAdapter = new StorageListAdapter(requireContext(), files, fileIds, sizes);
+        spinnerAdapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_spinner_dropdown_item,packages);
         binding.list.setAdapter(listAdapter);
         binding.packages.setAdapter(spinnerAdapter);
         ImageView imageView = new ImageView(getContext());
@@ -86,28 +93,21 @@ public class StorageFragment extends Fragment implements View.OnClickListener {
         binding.addFile.setOnClickListener(this);
         binding.addPackage.setOnClickListener(this);
         binding.delete.setOnClickListener(this);
-
-        Utils.helper.queryFiles(map.get((String) binding.packages.getSelectedItem())).addOnCompleteListener(task -> {
-            if (task.isSuccessful()) {
-                for (GoogleDriveFileHolder holder : task.getResult()){
-                    size += holder.getSize();
-                }
-                size = size / (1024*1024);
-            }
-        });
-
-        populateList();
         binding.packages.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 listAdapter.clear();
                 populateList();
+                currentApp = packages.get(position);
                 db.put("selection", position);
             }
 
             @Override
             public void onNothingSelected(AdapterView<?> parent) {
             }
+        });
+        MainActivity.drive.getFileSize(map.get(currentApp.toString())).setOnSuccessCallback(Size -> {
+            size = Size;
         });
         return binding.getRoot();
     }
@@ -121,19 +121,22 @@ public class StorageFragment extends Fragment implements View.OnClickListener {
             } else
                 Toast.makeText(getContext(), "Your storage quota is full", Toast.LENGTH_SHORT).show();
         } else if (v == binding.delete) {
-            String position = (String) binding.packages.getSelectedItem();
+            String position = (String) currentApp;
             if (spinnerAdapter.getCount() == 1) {
                 binding.packages.setVisibility(View.GONE);
                 binding.delete.setVisibility(View.GONE);
                 binding.addFile.setVisibility(View.GONE);
             }
-            Utils.helper.deleteFolderFile(map.get(position)).addOnCompleteListener(task -> {
-                if (task.isSuccessful()) {
-                    map.put(position,null);
+            MainActivity.delete(getContext(), map.get(position), task -> {
+                if (task.isSuccessful) {
+                    map.put(position, null);
                     packages.remove(position);
                     spinnerAdapter.notifyDataSetChanged();
-                } else
+                    listAdapter.clear();
+                } else{
                     Toast.makeText(getContext(), "Failed to delete app", Toast.LENGTH_SHORT).show();
+                    task.exception.printStackTrace();
+                }
             });
         } else if (v == binding.addPackage) {
             DialogAddCommonBinding dialogBinding = DialogAddCommonBinding.inflate(getLayoutInflater());
@@ -150,53 +153,18 @@ public class StorageFragment extends Fragment implements View.OnClickListener {
                                 Toast.makeText(getContext(), "Package name already exist in database", Toast.LENGTH_SHORT).show();
                             else {
                                 Snackbar.make(getActivity().findViewById(android.R.id.content), "Adding app...", BaseTransientBottomBar.LENGTH_LONG).show();
-                                String folder = Utils.getFileId(pName, Utils.clorabaseID);
-                                if (folder == null) {
-                                    Utils.helper.createFolder(pName, Utils.clorabaseID).addOnCompleteListener(task -> {
-                                        if (task.isSuccessful()) {
-                                            Utils.helper.createFolder("Storage", task.getResult().getId()).addOnCompleteListener(finakTask -> {
-                                                if (finakTask.isSuccessful()) {
-                                                    if (packages.size() == 0) {
-                                                        binding.addFile.setVisibility(View.VISIBLE);
-                                                        binding.packages.setVisibility(View.VISIBLE);
-                                                    }
-                                                    map.put(pName, finakTask.getResult().getId());
-                                                    packages.add(pName);
-                                                    binding.packages.setSelection(packages.size() - 1);
-                                                    spinnerAdapter.notifyDataSetChanged();
-                                                } else
-                                                    Toast.makeText(getContext(), "Error creating storage bucket", Toast.LENGTH_SHORT).show();
-                                            });
-                                        } else {
-                                            Toast.makeText(getContext(), "Error adding app to clorabase", Toast.LENGTH_SHORT).show();
-                                        }
-                                    });
-                                } else {
-                                    String storage = Utils.getFileId("Storage", folder);
-                                    if (storage == null) {
-                                        Utils.helper.createFolder("Storage", folder).addOnCompleteListener(task -> {
-                                            if (task.isSuccessful()){
-                                                if (packages.size() == 0) {
-                                                    binding.addFile.setVisibility(View.VISIBLE);
-                                                    binding.packages.setVisibility(View.VISIBLE);
-                                                }
-                                                map.put(pName, task.getResult().getId());
-                                                packages.add(pName);
-                                                spinnerAdapter.notifyDataSetChanged();
-                                            } else
-                                                Toast.makeText(getContext(), "Failed to create storage bucket", Toast.LENGTH_SHORT).show();
-                                        });
-                                    } else {
+                                MainActivity.configureFeature(getContext(),pName + "/Storage",task -> {
+                                    if (task.isSuccessful) {
                                         if (packages.size() == 0) {
                                             binding.addFile.setVisibility(View.VISIBLE);
                                             binding.packages.setVisibility(View.VISIBLE);
                                         }
-                                        map.put(pName, storage);
-                                        System.out.println("Storage id : " + storage);
+                                        map.put(pName, task.result);
                                         packages.add(pName);
                                         spinnerAdapter.notifyDataSetChanged();
-                                    }
-                                }
+                                    } else
+                                        Toast.makeText(getContext(), "Failed to create storage bucket", Toast.LENGTH_SHORT).show();
+                                });
                             }
                         }
                     }).setNegativeButton("candle", null).show();
@@ -212,6 +180,7 @@ public class StorageFragment extends Fragment implements View.OnClickListener {
             dialog.setMax(100);
             dialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
             dialog.setTitle("Uploading file");
+            dialog.setCancelable(true);
             dialog.show();
 
             String filename = "Unnamed.file";
@@ -230,25 +199,26 @@ public class StorageFragment extends Fragment implements View.OnClickListener {
                 InputStream in = getContext().getContentResolver().openInputStream(uri);
                 int size = in.available() / 1024 * 1024;
                 String finalFilename = filename;
-                Utils.upload(in, filename, map.get((String) binding.packages.getSelectedItem()), new ProgressListener() {
+                MainActivity.drive.uploadFile(filename,in,map.get((String) currentApp), new EasyDrive.ProgressListener() {
                     @Override
-                    public void onProgress(int percent) {
-                        dialog.setProgress(percent);
+                    public void onProgress(int percentage) {
+                        getActivity().runOnUiThread(() -> dialog.setProgress(percentage));
                     }
 
                     @Override
-                    public void onComplete(String fileId) {
-                        dialog.dismiss();
-                        files.add(finalFilename);
-                        fileIds.add(fileId);
-                        sizes.add(size);
-                        listAdapter.notifyDataSetChanged();
+                    public void onFinish(String fileId) {
+                        getActivity().runOnUiThread(() -> {
+                            dialog.dismiss();
+                            files.add(finalFilename);
+                            fileIds.add(fileId);
+                            sizes.add(size);
+                            listAdapter.notifyDataSetChanged();
+                        });
                     }
 
                     @Override
                     public void onFailed(Exception e) {
                         e.printStackTrace();
-                        Toast.makeText(getContext(), e.getMessage(), Toast.LENGTH_SHORT).show();
                     }
                 });
             } catch (IOException e) {
@@ -262,22 +232,24 @@ public class StorageFragment extends Fragment implements View.OnClickListener {
 
     public void populateList() {
         if (map.size() > 0) {
-            Utils.helper.queryFiles(map.get((String) binding.packages.getSelectedItem()))
-                    .addOnSuccessListener(list -> {
-                        for (GoogleDriveFileHolder file : list) {
-                            files.add(file.getName());
-                            sizes.add((int) (file.getSize() / 1024 * 1024));
-                            fileIds.add(file.getId());
-                        }
-                        listAdapter.notifyDataSetChanged();
-                    }).addOnFailureListener(e -> Toast.makeText(getContext(), e.getMessage(), Toast.LENGTH_SHORT).show());
+            MainActivity.drive.listFiles(map.get(currentApp)).setOnSuccessCallback(list -> {
+                for (FileMetadata file : list) {
+                    System.out.println(file.name);
+                    files.add(file.name);
+                    sizes.add((int) (file.size));
+                    fileIds.add(file.id);
+                }
+                getActivity().runOnUiThread(() -> {
+                    listAdapter.notifyDataSetChanged();
+                });
+            }).setOnErrorCallback(Throwable::printStackTrace);
         }
     }
 
     @Override
     public void onStop() {
         super.onStop();
-        for (String key : map.keySet()){
+        for (String key : map.keySet()) {
             spinnerNode.put(key, map.get(key));
         }
     }

@@ -1,127 +1,278 @@
 package com.clorabase.db;
 
 import android.content.Context;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
-import com.clorabase.DriveHelper;
-import com.clorem.db.Clorem;
-import com.clorem.db.Node;
+import com.clorabase.Constants;
+import com.google.android.gms.tasks.Task;
+import com.google.android.gms.tasks.Tasks;
 
-import java.io.File;
+import org.json.JSONArray;
+import org.json.JSONObject;
+
+import java.lang.ref.WeakReference;
+import java.net.URI;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+
+import db.clorabase.clorem.Clorem;
+import db.clorabase.clorem.Node;
 
 /**
- * Clorabase database is the online database hosted on google drive and deployed on our server. All the
- * data is saved to the google drive while we only provide medium (API gateway) to access it.
+ * ClorabaseDatabase is the only main class for interacting with the Clorabase database. Clorabase serverless database uses
+ * CloremDB internally to store the data, So you should know how to work with it. You must configure the database from console before using it.
+ * This class is thread-safe and all the methods runs asynchronously. It supports offline capabilities too.
+ *
  * @author Rahil khan
  * @version 2.0
+ * @see <a href="https://docs.clorabase.tk/#/documents/database?id=clorabase-database">Documentation</a>
+ * @see <a href="https://github.com/ErrorxCode/CloremDB">CloremDB</a>
+ * @since 1.0
  */
 public class ClorabaseDatabase {
-    private final String databaseId;
-    private final Clorem clorem;
-    private final DriveHelper helper;
-    private DriveHelper.Callback callback;
-    private volatile int size;
-    private final File file;
+    protected Node node;
+    protected static WeakReference<Context> context;
+    protected static Node root;
+    protected static ClorabaseDatabase INSTANCE;
+    protected static ExecutorService executor;
+    protected static DatabaseClient database;
 
-    /**
-     * Initializes the database connecting it to the server. The connection is authenticated using provided token.
-     * If the token is invalid then the subsequent call on method of this class will fail throwing an exception for the
-     * failure of the authentication. Authentication is done in background so it's better not to use database just after
-     * calling this.
-     * @param context Activity contexts
-     * @param token Clorabase account token. You can get this from the console.
-     * @param projectId The ID of your clorabase project. Get it from console.
-     */
-    public ClorabaseDatabase(@NonNull Context context,@NonNull String token,@NonNull String projectId) {
-        helper = new DriveHelper(token);
-        this.databaseId = helper.getFileId("database.json,",projectId);
-        if (databaseId == null)
-            throw new IllegalArgumentException("Invalid project id or database is not configured");
-        else {
-            new Thread(() -> size = helper.getFolderSize(databaseId)).start();
-            clorem = Clorem.getInstance(context, "clorabase");
-            file = new File(context.getApplicationInfo().dataDir, "databases/clorabase.json");
-            this.callback = callback == null ? new DriveHelper.Callback() {
-                @Override
-                public void onSuccess() {
-
-                }
-
-                @Override
-                public void onError(Exception e) {
-
-                }
-            } : callback;
-        }
+    private ClorabaseDatabase(Node name) {
+        this.node = name;
     }
 
     /**
-     * Returns the local database of the device. This database is not synced with the server.
-     * To sync it with the server, you need to call {@link #syncDatabase()} before calling this.
-     * @return The root node of the database.
+     * Initialize the database synchronously. This method blocks the thread for at most 5 seconds until the database is initialized.
+     * If the database is not initialized successfully within 5 seconds, further calls to the class method will throw an exception. Only use if the
+     * internet is not slow and database size is not too large.
+     * @param context Activity context
+     * @param DB_ID Database ID that you got from console
+     * @param token Access token that you got from console
+     * @return ClorabaseDatabase instance
      */
-    public Node getDatabase() {
-        return clorem.getDatabase();
-    }
-
-    /**
-     * Syncs and return the database. This database is synced with the server. You don't explicitly need
-     * to call {@link #syncDatabase()}.
-     * @param callback The callback which will have to node of the database if succeed, else an exception
-     */
-    public void getDatabaseAsync(@NonNull DatabaseCallback callback){
-        helper.downloadAsync(file,databaseId,new DriveHelper.Callback() {
-            @Override
-            public void onSuccess() {
-                callback.onCreated(clorem.getDatabase());
+    public static synchronized ClorabaseDatabase getInstance(@NonNull Context context, @NonNull String DB_ID, @NonNull String token) {
+        if (INSTANCE == null) {
+            database = new DatabaseClient(Constants.DATABASE_BASE_URL, init(context, DB_ID, token));
+            try {
+                boolean connected = database.connectBlocking(5, TimeUnit.SECONDS);
+                if (!connected)
+                    System.err.println("Connection to the database failed. Please check your internet connection.");
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
             }
+        }
+        return INSTANCE;
+    }
 
-            @Override
-            public void onError(Exception e) {
-                callback.onError(e);
+    /**
+     * Initialize the database asynchronously and returns the instance immediately.
+     * If the database failed to initialize or is not initialized yet, further calls
+     * to the class method will throw an exception. Only use if internet is slow or database size is too large.
+     * @param context Activity context
+     * @param DB_ID Database ID that you got from console
+     * @param token Access token that you got from console
+     * @return ClorabaseDatabase instance
+     */
+    public static synchronized ClorabaseDatabase getInstanceAsync(@NonNull Context context, @NonNull String DB_ID, @NonNull String token) {
+        if (INSTANCE == null) {
+            database = new DatabaseClient(Constants.DATABASE_BASE_URL, init(context, DB_ID, token));
+            database.connect();
+        }
+        return INSTANCE;
+    }
+
+    private static Map<String, String> init(Context context, String DB_ID, String token) {
+        root = Clorem.getInstance(context.getFilesDir(), "clorabase").getDatabase();
+        INSTANCE = new ClorabaseDatabase(root);
+        executor = Executors.newCachedThreadPool();
+        ClorabaseDatabase.context = new WeakReference<>(context);
+        Map<String, String> headers = new HashMap<>();
+        headers.put("Package", context.getPackageName());
+        headers.put("Client-ID", Constants.CLIENT_ID);
+        headers.put("Client-Secret", Constants.CLIENT_SECRET);
+        headers.put("DB-ID", DB_ID);
+        headers.put("Access-Token", token);
+        return headers;
+    }
+
+    /**
+     * Goes to the specified node. If the node does not exist, it will be created.
+     * @param name The name or relatives path of the node (from root)
+     * @return Same instance with the new node
+     */
+    public ClorabaseDatabase node(String name) {
+        return new ClorabaseDatabase(node.node(name));
+    }
+
+    /**
+     * Gets the data of the current node in the form of a MAP.
+     * @return Task<Map<String, Object>> that contains the data of the current node
+     */
+    public Task<Map<String, Object>> getData() {
+        return Tasks.call(executor, () -> {
+            if (hasInternet()) {
+                JSONObject json = new JSONObject();
+                json.put("node", node.getPath());
+                json.put("method", "getData");
+                JSONObject jsonObject = new JSONObject(database.sendMessage(json));
+                return asMap(jsonObject);
+            } else
+                return this.node.getData();
+        });
+    }
+
+    /**
+     * Inserts the data in the current node. If the key already exists, its value will be updated.
+     * @param data Map<String, Object> that contains the data to be inserted
+     * @return Task<String> that contains the response  of the operation
+     */
+    public Task<String> setData(Map<String, Object> data) {
+        node.put(data);
+        node.commit();
+        return Tasks.call(executor, () -> {
+            if (hasInternet()) {
+                JSONObject json = new JSONObject();
+                json.put("method", "putData");
+                json.put("node", node.getPath());
+                json.put("data", new JSONObject(data));
+                return database.sendMessage(json);
+            } else
+                throw new Exception("No internet connection");
+        });
+    }
+
+    /**
+     * Delete a underlying nested node within the current node.
+     * @param node Name or relative path (from current node) of the node to be deleted
+     * @return Task<String> that contains the response of the operation
+     */
+    public Task<String> delete(@NonNull String node) {
+        this.node.delete(node);
+        return Tasks.call(executor, () -> {
+            if (hasInternet()) {
+                JSONObject json = new JSONObject();
+                json.put("method", "delete");
+                json.put("node",node);
+                return database.sendMessage(json);
+            } else
+                throw new Exception("No internet connection");
+        });
+    }
+
+    /**
+     * Sorts the node by a database query & returns then returns the data of the sorted node.
+     * @param query Query to be executed. See <a href="https://github.com/ErrorxCode/CloremDB/wiki/Guide#quering-database">Queries</a>
+     * @return Task<Map<String, Object>> that contains the data of the resulted nodes
+     */
+    public Task<List<Map<String, Object>>> query(String query) {
+        List<Map<String, Object>> result = new ArrayList<>();
+        return Tasks.call(executor, () -> {
+            if (hasInternet()) {
+                JSONObject json = new JSONObject();
+                json.put("method", "query");
+                json.put("node", node.getPath());
+                json.put("query", query);
+                JSONArray jsonArray = new JSONArray(database.sendMessage(json));
+                for (int i = 0; i < jsonArray.length(); i++) {
+                    result.add(asMap((jsonArray.getJSONObject(i))));
+                }
+                return result;
+            } else {
+                List<Node> nodes = node.query().fromQuery(query);
+                for (Node node : nodes) {
+                    result.add(node.getData());
+                }
+                return null;
             }
         });
     }
 
     /**
-     * Sync the local database with the server. This is synchronous call.
-     * @throws Exception If failed to sync.
+     * Insert a new item to the list. If the value type is not same as the items of the list, operation will fail.
+     * @param key Key of list (within the current node)
+     * @param value The item to be inserted
+     * @return Task<String> that contains the response of the operation
      */
-    public void syncDatabase() throws Exception {
-        helper.download(file,databaseId);
+    public Task<String> addItem(@NonNull String key, @NonNull Object value) {
+        return Tasks.call(executor, () -> {
+            if (hasInternet()) {
+                JSONObject json = new JSONObject();
+                json.put("method", "addItem");
+                json.put("node", node.getPath());
+                json.put("key", key);
+                json.put("value", value);
+                return database.sendMessage(json);
+            } else
+                throw new Exception("No internet connection");
+        });
+    }
+
+    /**
+     * Removes an item from the list.
+     * @param key Key of list (which is in the current node)
+     * @param index Index of the item to be removed
+     * @return Task<String> that contains the response of the operation
+     */
+    public Task<String> removeItem(@NonNull String key, int index) {
+        return Tasks.call(executor, () -> {
+            if (hasInternet()) {
+                JSONObject json = new JSONObject();
+                json.put("method", "removeItem");
+                json.put("node", node.getPath());
+                json.put("key", key);
+                json.put("index", index);
+                return database.sendMessage(json);
+            } else
+                throw new Exception("No internet connection");
+        });
+    }
+
+    /**
+     * Forces the server to push the database to the drive. Should not be used if it is not necessary.
+     * @return Task<String> that contains the response of the operation
+     */
+    public Task<String> forceCommit() {
+        return Tasks.call(executor, () -> {
+            if (hasInternet()) {
+                return database.sendMessage(new JSONObject("{\"method\":\"commit\"}"));
+            } else
+                throw new Exception("No internet connection");
+        });
+    }
+
+    private boolean hasInternet() {
+        NetworkInfo info = context.get().getSystemService(ConnectivityManager.class).getActiveNetworkInfo();
+        return info != null && info.isConnected();
     }
 
 
-    /**
-     * Syncs the server with the local database. This is asynchronous call.
-     * @param callback Optional callback indicating success and failure of the request.
-     */
-    public void syncServer(@Nullable DriveHelper.Callback callback) {
-        callback = callback == null ? new DriveHelper.Callback() {
-            @Override
-            public void onSuccess() {
-
-            }
-
-            @Override
-            public void onError(Exception e) {
-
-            }
-        } : callback;
-        if (size > 512)
-            callback.onError(new Exception("Database size quota exceeds, please delete some data to save further"));
-        else
-            helper.updateFileAsync(file,databaseId,callback);
+    private Map<String, Object> asMap(JSONObject jsonObject) {
+        Iterator<String> iterator = jsonObject.keys();
+        Map<String, Object> map = new HashMap<>();
+        while (iterator.hasNext()) {
+            String key = iterator.next();
+            Object opt = jsonObject.opt(key);
+            map.put(key, opt instanceof JSONObject ? asMap((JSONObject) opt) : opt);
+        }
+        return map;
     }
 
-
     /**
-     * Interface used with {@link #getDatabaseAsync(DatabaseCallback)} method.
+     * Gets the {@link Node} reference from its data.
+     * @param data Data of the node
+     * @return The {@link Node} reference
      */
-    public interface DatabaseCallback {
-        void onCreated(Node node);
-        void onError(Exception e);
+    public Node getReference(Map<String, Object> data) {
+        return root.node((String) data.get("_address"));
     }
 }

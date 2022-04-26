@@ -14,6 +14,9 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
+/**
+ * Clorabase Push Messaging SDK main class. Handles the communication with the Clorabase Push Messaging API.
+ */
 public class ClorabasePushMessaging {
 
     /**

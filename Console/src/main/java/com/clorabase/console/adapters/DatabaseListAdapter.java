@@ -1,6 +1,7 @@
 package com.clorabase.console.adapters;
 
 import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
@@ -10,16 +11,19 @@ import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.clorabase.console.MainActivity;
 import com.clorabase.console.R;
-import com.clorabase.console.Utils;
 import com.clorabase.console.fragments.DatabaseFragment;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
 import java.util.List;
+
+import apis.xcoder.easydrive.AsyncTask;
 
 public class DatabaseListAdapter extends BaseAdapter {
     private final List<String> names;
@@ -54,14 +58,19 @@ public class DatabaseListAdapter extends BaseAdapter {
         delete.setOnClickListener(v -> new MaterialAlertDialogBuilder(context)
                 .setTitle("Are you sure ?")
                 .setMessage("This will delete the whole database. You can't undo this action")
-                .setPositiveButton("Delete", (dialog, which) -> Utils.helper.deleteFolderFile(DatabaseFragment.ids.get(position)).addOnCompleteListener(task -> {
-                    if (task.isSuccessful()){
-                        names.remove(position);
-                        packages.remove(position);
-                        sizes.remove(position);
-                        notifyDataSetChanged();
-                    }
-                })).setNegativeButton("Cancel", null).show());
+                .setPositiveButton("Delete", (dialog, which) -> {
+                    MainActivity.delete(context, DatabaseFragment.ids.get(position), task -> {
+                        if (task.isSuccessful) {
+                            names.remove(position);
+                            packages.remove(position);
+                            sizes.remove(position);
+                            notifyDataSetChanged();
+                        } else {
+                            Toast.makeText(context, "Failed to delete database", Toast.LENGTH_SHORT).show();
+                            task.exception.printStackTrace();
+                        }
+                    });
+                }).show());
 
         preview.setOnClickListener(v -> context.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://drive.google.com/file/d/" + DatabaseFragment.ids.get(position) + "/view"))));
         return view;
@@ -84,10 +93,10 @@ public class DatabaseListAdapter extends BaseAdapter {
 
     @Override
     public void notifyDataSetChanged() {
+        DatabaseFragment.db.put("packages",packages);
+        DatabaseFragment.db.put("names",names);
+        DatabaseFragment.db.put("sizes",sizes);
+        DatabaseFragment.db.put("ids",DatabaseFragment.ids);
         super.notifyDataSetChanged();
-        DatabaseFragment.db.putStringList("packages",packages);
-        DatabaseFragment.db.putStringList("names",names);
-        DatabaseFragment.db.putIntList("sizes",sizes);
-        DatabaseFragment.db.putStringList("ids",DatabaseFragment.ids);
     }
 }

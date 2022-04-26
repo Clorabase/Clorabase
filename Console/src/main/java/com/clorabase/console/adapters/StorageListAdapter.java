@@ -10,14 +10,14 @@ import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.Toast;
 
-import com.clorabase.console.Utils;
+import com.clorabase.console.MainActivity;
 import com.clorabase.console.databinding.ListStorageBinding;
 
-import java.io.IOException;
 import java.util.List;
 
+import apis.xcoder.easydrive.AsyncTask;
+
 public class StorageListAdapter extends BaseAdapter {
-    private ListStorageBinding binding;
     private final Context context;
     private final List<String> names;
     private final List<String> ids;
@@ -48,30 +48,27 @@ public class StorageListAdapter extends BaseAdapter {
     @Override
     @SuppressLint("ViewHolder")
     public View getView(int position, View convertView, ViewGroup parent) {
-        binding = ListStorageBinding.inflate(LayoutInflater.from(context));
+        com.clorabase.console.databinding.ListStorageBinding binding = ListStorageBinding.inflate(LayoutInflater.from(context));
         binding.name.setText(names.get(position));
         binding.id.setText(ids.get(position));
         binding.size.append(sizes.get(position) + "MB");
 
         binding.delete.setOnClickListener(v -> {
-            Utils.helper.deleteFolderFile(ids.get(position)).addOnCompleteListener(task -> {
-                if (task.isSuccessful()){
+            MainActivity.delete(context, ids.get(position), task -> {
+                if (task.isSuccessful){
                     ids.remove(position);
                     sizes.remove(position);
                     names.remove(position);
                     notifyDataSetChanged();
                 } else
-                    Toast.makeText(context, task.getException().getMessage(), Toast.LENGTH_SHORT).show();
+                    Toast.makeText(context, task.exception.getMessage(), Toast.LENGTH_SHORT).show();
             });
         });
         binding.download.setOnClickListener(v -> {
-            try {
-                String link = Utils.drive.files().get(ids.get(position)).executeUnparsed().getRequest().getUrl().getHost();
-                context.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(link)));
-            } catch (IOException e) {
-                e.printStackTrace();
-                Toast.makeText(context, "Failed to download", Toast.LENGTH_SHORT).show();
-            }
+            Toast.makeText(context, "You can download file from browser", Toast.LENGTH_SHORT).show();
+            MainActivity.drive.getFileId(ids.get(position),null).setOnSuccessCallback(id -> {
+                context.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://drive.google.com/file/d/" + id)));
+            }).setOnErrorCallback(e -> Toast.makeText(context, e.getMessage(), Toast.LENGTH_SHORT).show());
         });
         return binding.getRoot();
     }

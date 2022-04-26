@@ -12,17 +12,18 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
 
+import com.clorabase.console.MainActivity;
 import com.clorabase.console.R;
-import com.clorabase.console.Utils;
 import com.clorabase.console.adapters.DatabaseListAdapter;
 import com.clorabase.console.databinding.FragmentDatabaseBinding;
-import com.clorem.db.Node;
 import com.google.android.material.snackbar.BaseTransientBottomBar;
 import com.google.android.material.snackbar.Snackbar;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+
+import apis.xcoder.easydrive.AsyncTask;
+import db.clorabase.clorem.Node;
 
 public class DatabaseFragment extends Fragment {
     public static Node db;
@@ -38,7 +39,7 @@ public class DatabaseFragment extends Fragment {
 
         ImageView image = new ImageView(getContext());
         image.setImageResource(R.drawable.empty_list);
-        db = Utils.db.node("Database");
+        db = MainActivity.db.node("Database");
         names = db.getListString("names");
         packageNames = db.getListString("packages");
         ids = db.getListString("ids");
@@ -71,31 +72,17 @@ public class DatabaseFragment extends Fragment {
                             Toast.makeText(getContext(), "App already exist", Toast.LENGTH_SHORT).show();
                         } else {
                             Snackbar.make(getActivity().findViewById(android.R.id.content),"Adding database...", BaseTransientBottomBar.LENGTH_LONG).show();
-                            Utils.helper.createFolderIfNotExist(packageName, Utils.clorabaseID).addOnCompleteListener(task -> {
-                                if (task.isSuccessful()) {
-                                    String folder = task.getResult().getId();
-                                    String fileId = Utils.getFileId("database.json", folder);
-                                    if (fileId == null){
-                                        Utils.helper.createFile("database.json",folder).addOnCompleteListener(finalTask -> {
-                                            if (finalTask.isSuccessful()) {
-                                                names.add(name);
-                                                packageNames.add(packageName);
-                                                ids.add(finalTask.getResult());
-                                                sizes.add(0);
-                                                adapter.notifyDataSetChanged();
-                                            } else
-                                                Toast.makeText(getContext(), "Failed to create database", Toast.LENGTH_SHORT).show();
-                                        });
-                                    } else {
-                                        names.add(name);
-                                        packageNames.add(packageName);
-                                        ids.add(fileId);
-                                        sizes.add(0);
-                                        adapter.notifyDataSetChanged();
-                                        populateList();
-                                    }
-                                } else
-                                    Toast.makeText(getContext(), "Failed to create app", Toast.LENGTH_SHORT).show();
+                            MainActivity.configureFeature(getContext(), packageName + "/clorabase.db", call -> {
+                                if (call.isSuccessful){
+                                    names.add(name);
+                                    packageNames.add(packageName);
+                                    ids.add(call.result);
+                                    sizes.add(0);
+                                    adapter.notifyDataSetChanged();
+                                } else {
+                                    call.exception.printStackTrace();
+                                    Toast.makeText(getContext(), "Failed to create database", Toast.LENGTH_SHORT).show();
+                                }
                             });
                         }
                     }).setNegativeButton("Cancel", null).show();
@@ -106,15 +93,10 @@ public class DatabaseFragment extends Fragment {
 
     private void populateList() {
         for (String id : ids){
-            new Thread(() -> {
-                try {
-                    long size = Utils.drive.files().get(id).setFields("size").execute().getSize();
-                    sizes.add((int) (size / 1024 * 1024));
-                    getActivity().runOnUiThread(() -> adapter.notifyDataSetChanged());
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }).start();
+            MainActivity.drive.getFileSize(id).setOnSuccessCallback(result -> {
+                sizes.add((int) (result / 1024 * 1024));
+                getActivity().runOnUiThread(() -> adapter.notifyDataSetChanged());
+            });
         }
     }
 }

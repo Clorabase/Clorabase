@@ -4,9 +4,15 @@ package com.clorabase.storage;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.clorabase.DriveHelper;
+import com.clorabase.Constants;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.security.GeneralSecurityException;
+
+import apis.xcoder.easydrive.EasyDrive;
 
 /**
  * ClorabaseStorage is a free place where you can upload and download files related to your apps.
@@ -17,7 +23,7 @@ import java.io.File;
 public class ClorabaseStorage {
     private final String id;
     private final ClorabaseStorageCallback callback;
-    private final DriveHelper helper;
+    private final EasyDrive helper;
 
 
     /**
@@ -25,24 +31,28 @@ public class ClorabaseStorage {
      * @param storageId The id of your storage bucket. You can get it from console.
      */
     public ClorabaseStorage(@NonNull String storageId, @NonNull String token, @Nullable ClorabaseStorageCallback callback) {
-        helper = new DriveHelper(token);
-        id = storageId;
-        this.callback = callback == null ? new ClorabaseStorageCallback() {
-            @Override
-            public void onFailed(@NonNull Exception e) {
+        try {
+            helper = new EasyDrive(Constants.CLIENT_ID,Constants.CLIENT_SECRET,token);
+            id = storageId;
+            this.callback = callback == null ? new ClorabaseStorageCallback() {
+                @Override
+                public void onFailed(@NonNull Exception e) {
 
-            }
+                }
 
-            @Override
-            public void onProgress(int prcnt) {
+                @Override
+                public void onProgress(int prcnt) {
 
-            }
+                }
 
-            @Override
-            public void onComplete(@NonNull String fileId) {
+                @Override
+                public void onComplete(@NonNull String fileId) {
 
-            }
-        }: callback;
+                }
+            }: callback;
+        } catch (GeneralSecurityException | IOException e) {
+            throw new IllegalArgumentException("Are you sure your token is valid?");
+        }
     }
 
     /**
@@ -51,7 +61,26 @@ public class ClorabaseStorage {
      * @param file The file to upload, your application must have permission to read this file.
      */
     public void upload(@NonNull File file){
-        helper.uploadFile(file,id,callback);
+        try {
+            helper.uploadFile(file.getName(),new FileInputStream(file), id, new EasyDrive.ProgressListener() {
+                @Override
+                public void onProgress(int percentage) {
+                    callback.onProgress(percentage);
+                }
+
+                @Override
+                public void onFinish(String fileId) {
+                    callback.onComplete(fileId);
+                }
+
+                @Override
+                public void onFailed(Exception e) {
+                    callback.onFailed(e);
+                }
+            });
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
     }
 
     /**
@@ -60,7 +89,22 @@ public class ClorabaseStorage {
      * @param directory The external directory where to save the file.
      */
     public void download(@NonNull String fileId,@NonNull File directory){
-        helper.downloadFile(directory,fileId,callback);
+        helper.download(fileId, directory.getPath(), new EasyDrive.ProgressListener() {
+            @Override
+            public void onProgress(int percentage) {
+                callback.onProgress(percentage);
+            }
+
+            @Override
+            public void onFinish(String fileId) {
+                callback.onComplete(fileId);
+            }
+
+            @Override
+            public void onFailed(Exception e) {
+                callback.onFailed(e);
+            }
+        });
     }
 
 

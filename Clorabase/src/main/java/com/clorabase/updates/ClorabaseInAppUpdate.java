@@ -9,10 +9,20 @@ import android.net.Uri;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 
-import com.clorabase.DriveHelper;
+import com.clorabase.Constants;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.security.GeneralSecurityException;
+import java.util.Map;
+
+import apis.xcoder.easydrive.EasyDrive;
 
 /**
  * This class is of App Update feature in Clorabase. Using this feature, you can inform users obout the new update.
@@ -24,38 +34,33 @@ public class ClorabaseInAppUpdate {
     private static final String IMMEDIATE = "immediate";
 
 
-    protected ClorabaseInAppUpdate() {
-    }
-
     /**
      * This will start the flow of checking and updating the app. Call this when you want to check for update
      *
      * @param context   The context of the activity.
      * @param token     Clorabase authorization token. Get it from console.
-     * @param projectId id of your clorabase project. Available in console
      */
-    public static void init(@NonNull Context context, @NonNull String token, @NonNull String projectId) {
-        DriveHelper helper = new DriveHelper(token);
-        new Thread(() -> {
-            try {
-                String fileId = helper.getFileId("versions.json", projectId);
-                if (fileId == null) {
-                       throw new IllegalArgumentException("Project id is invalid or in-app updates is not configured");
-                } else {
-                    JSONObject content = new JSONObject(helper.getContent(fileId));
-                    System.out.println(content.toString(3));
-                    int versionCode = content.getInt("versionCode");
-                    String link = content.getString("link");
-                    String mode = content.getString("mode");
+    public static void init(@NonNull Context context, @NonNull String token, @NonNull String engageId) {
+        try {
+            EasyDrive helper = new EasyDrive(Constants.CLIENT_ID,Constants.CLIENT_SECRET,token);
+            helper.getContent(engageId).setOnSuccessCallback(content -> {
+                try {
+                    JSONObject json = new JSONObject(new String(content));
+                    int versionCode = json.getInt("versionCode");
+                    String link = json.getString("link");
+                    String mode = json.getString("mode");
 
+                    System.out.println(json.toString(3));
                     int currentVersion = context.getPackageManager().getPackageInfo(context.getPackageName(), PackageManager.GET_META_DATA).versionCode;
                     if (versionCode > currentVersion)
                         ((Activity) context).runOnUiThread(() -> startUpdateFlow(context, mode, link));
+                } catch (PackageManager.NameNotFoundException | JSONException e) {
+                    e.printStackTrace();
                 }
-            } catch (JSONException | PackageManager.NameNotFoundException e) {
-                e.printStackTrace();
-            }
-        }).start();
+            }).setOnErrorCallback(Throwable::printStackTrace);
+        } catch (GeneralSecurityException | IOException e) {
+            throw new IllegalArgumentException("Are you sure your token is valid?");
+        }
     }
 
 

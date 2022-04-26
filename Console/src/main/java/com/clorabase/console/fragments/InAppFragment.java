@@ -11,7 +11,7 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 
-import com.clorabase.console.Utils;
+import com.clorabase.console.MainActivity;
 import com.clorabase.console.databinding.FragmentInappBinding;
 
 import org.json.JSONException;
@@ -32,36 +32,26 @@ public class InAppFragment extends Fragment implements TextWatcher {
             link = binding.link.getText().toString();
             image = binding.image.getText().toString();
 
-            JSONObject map = new JSONObject();
             try {
+                JSONObject map = new JSONObject();
                 map.put("title", title);
                 map.put("message", message);
                 map.put("image", image);
                 map.put("link", link);
                 map.put("type", "simple");
-                Utils.helper.createFolderIfNotExist(packageName, Utils.clorabaseID).addOnCompleteListener(task -> {
-                    if (task.isSuccessful()){
-                        String folderId = task.getResult().getId();
-                        String fileID = Utils.getFileId("messaging.json",folderId);
-                        if (fileID == null) {
-                            Utils.helper.createTextFile("messaging.json",map.toString(), folderId).addOnCompleteListener(fileTask -> {
-                                if (fileTask.isSuccessful())
-                                    Toast.makeText(getContext(), "Message sent", Toast.LENGTH_SHORT).show();
-                                else
-                                    Toast.makeText(getContext(), fileTask.getException().getMessage(), Toast.LENGTH_SHORT).show();
-                            });
-                        } else {
-                            Utils.updateFile(fileID,map.toString()).addOnCompleteListener(fileTask -> {
-                                if (fileTask.isSuccessful())
-                                    Toast.makeText(getContext(), "Message sent", Toast.LENGTH_SHORT).show();
-                                else
-                                    Toast.makeText(getContext(), fileTask.getException().getMessage(), Toast.LENGTH_SHORT).show();
-                            });
-                        }
-                    }
+                MainActivity.configureFeature(getContext(), packageName + "/messaging.json", task -> {
+                    if (task.isSuccessful) {
+                        MainActivity.updateFile(getContext(),task.result,map.toString(),call -> {
+                            if (call.isSuccessful)
+                                Toast.makeText(getContext(), "InApp Message Sent", Toast.LENGTH_SHORT).show();
+                            else
+                                Toast.makeText(getContext(), "Error: " + call.exception.getMessage(), Toast.LENGTH_SHORT).show();
+                        });
+                    } else
+                        Toast.makeText(getContext(), "Error: " + task.exception.getMessage(), Toast.LENGTH_SHORT).show();
                 });
-            } catch (JSONException e){
-                Toast.makeText(getContext(), e.getMessage(), Toast.LENGTH_SHORT).show();
+            } catch (JSONException e) {
+                e.printStackTrace();
             }
         });
         return binding.getRoot();

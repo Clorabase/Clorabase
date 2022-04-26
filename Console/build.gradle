@@ -10,9 +10,9 @@ android {
     defaultConfig {
         applicationId "com.clorabase.console"
         minSdkVersion 23
-        targetSdkVersion 30
-        versionCode 15
-        versionName "1.5"
+        targetSdkVersion 31
+        versionCode 16
+        versionName "1.6"
     }
 
     buildTypes {
@@ -32,15 +32,18 @@ android {
 
     packagingOptions {
         resources.excludes.add("META-INF/*")
+        resources.excludes.add("mozilla/*")
     }
 }
 
 dependencies {
     implementation 'com.github.Shashank02051997:FancyAboutPage-Android:2.8'
     implementation project(path: ':CloremDB')
-    implementation 'com.google.guava:listenablefuture:9999.0-empty-to-avoid-conflict-with-guava'
+    implementation project(path: ':FileScrapper')
+    implementation project(path: ':EasyDrive')
     implementation 'com.google.android.material:material:1.4.0'
-    implementation 'com.github.ammarptn:GDrive-Rest-Android:1.4.3'
     implementation 'androidx.appcompat:appcompat:1.4.1'
+    implementation 'org.java-websocket:Java-WebSocket:1.5.3'
     implementation 'androidx.constraintlayout:constraintlayout:2.0.4'
+    implementation 'com.google.android.gms:play-services-tasks:18.0.1'
 }
