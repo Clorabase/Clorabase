@@ -64,7 +64,7 @@ public class ClorabaseDatabase {
         if (INSTANCE == null) {
             database = new DatabaseClient(Constants.DATABASE_BASE_URL, init(context, DB_ID, token));
             try {
-                boolean connected = database.connectBlocking(5, TimeUnit.SECONDS);
+                boolean connected = database.connectBlocking(15, TimeUnit.SECONDS);
                 if (!connected)
                     System.err.println("Connection to the database failed. Please check your internet connection.");
             } catch (InterruptedException e) {
