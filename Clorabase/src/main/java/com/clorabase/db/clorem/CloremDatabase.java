@@ -42,6 +42,7 @@ import db.clorabase.clorem.Node;
  * @since 1.0
  */
 public class CloremDatabase {
+    private static String DB_ID;
     protected Node node;
     protected static WeakReference<Context> context;
     protected static Node root;
@@ -65,7 +66,7 @@ public class CloremDatabase {
      */
     public static synchronized CloremDatabase getInstance(@NonNull Context context, @NonNull String DB_ID, @NonNull String token) {
         if (INSTANCE == null) {
-            database = new CloremClient(Constants.DATABASE_BASE_URL, init(context, DB_ID, token));
+            database = new CloremClient(Constants.DATABASE_BASE_URL, init(context, token));
             try {
                 boolean connected = database.connectBlocking(15, TimeUnit.SECONDS);
                 if (!connected)
@@ -89,13 +90,13 @@ public class CloremDatabase {
      */
     public static synchronized CloremDatabase getInstanceAsync(@NonNull Context context, @NonNull String DB_ID, @NonNull String token) {
         if (INSTANCE == null) {
-            database = new CloremClient(Constants.DATABASE_BASE_URL, init(context, DB_ID, token));
+            database = new CloremClient(Constants.DATABASE_BASE_URL, init(context, token));
             database.connect();
         }
         return INSTANCE;
     }
 
-    private static Map<String, String> init(Context context, String DB_ID, String token) {
+    private static Map<String, String> init(Context context,String token) {
         root = Clorem.getInstance(context.getFilesDir(), "clorabase").getDatabase();
         INSTANCE = new CloremDatabase(root);
         executor = Executors.newCachedThreadPool();
@@ -149,6 +150,7 @@ public class CloremDatabase {
                 JSONObject json = new JSONObject();
                 json.put("node", node.getPath());
                 json.put("method", "getData");
+                json.put("id", DB_ID);
                 JSONObject jsonObject = new JSONObject(database.sendMessage(json));
                 return asMap(jsonObject);
             } else
@@ -171,6 +173,7 @@ public class CloremDatabase {
                 json.put("method", "putData");
                 json.put("node", node.getPath());
                 json.put("data", new JSONObject(data));
+                json.put("id", DB_ID);
                 return database.sendMessage(json);
             } else
                 throw new Exception("No internet connection");
