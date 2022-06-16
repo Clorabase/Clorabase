@@ -66,7 +66,7 @@ public class CloremDatabase {
      */
     public static synchronized CloremDatabase getInstance(@NonNull Context context, @NonNull String DB_ID, @NonNull String token) {
         if (INSTANCE == null) {
-            database = new CloremClient(Constants.DATABASE_BASE_URL, init(context, token));
+            database = new CloremClient(Constants.DATABASE_BASE_URL, init(context, token,DB_ID));
             try {
                 boolean connected = database.connectBlocking(15, TimeUnit.SECONDS);
                 if (!connected)
@@ -90,27 +90,28 @@ public class CloremDatabase {
      */
     public static synchronized CloremDatabase getInstanceAsync(@NonNull Context context, @NonNull String DB_ID, @NonNull String token) {
         if (INSTANCE == null) {
-            database = new CloremClient(Constants.DATABASE_BASE_URL, init(context, token));
+            database = new CloremClient(Constants.DATABASE_BASE_URL, init(context, token, DB_ID));
             database.connect();
         }
         return INSTANCE;
     }
 
-    private static Map<String, String> init(Context context,String token) {
+    private static Map<String, String> init(Context context, String token, String db_id) {
         root = Clorem.getInstance(context.getFilesDir(), "clorabase").getDatabase();
         INSTANCE = new CloremDatabase(root);
+        DB_ID = db_id;
         executor = Executors.newCachedThreadPool();
         CloremDatabase.context = new WeakReference<>(context);
         Map<String, String> headers = new HashMap<>();
         headers.put("Client-ID", Constants.CLIENT_ID);
         headers.put("Client-Secret", Constants.CLIENT_SECRET);
-        headers.put("DB-ID", DB_ID);
+        headers.put("DB-ID", CloremDatabase.DB_ID);
         headers.put("Access-Token", token);
 
         ConnectivityManager.NetworkCallback networkCallback = new ConnectivityManager.NetworkCallback() {
             @Override
             public void onAvailable(Network network) {
-                getInstanceAsync(context, DB_ID, token);
+                getInstanceAsync(context, CloremDatabase.DB_ID, token);
             }
 
             @Override
