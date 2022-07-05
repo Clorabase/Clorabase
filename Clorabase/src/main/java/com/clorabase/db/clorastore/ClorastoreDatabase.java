@@ -28,19 +28,13 @@ public class ClorastoreDatabase {
         if (name.endsWith("/"))
             name = name.substring(0, name.length() - 1);
 
-        this.PATH += name + "/";
+        PATH += name + "/";
     }
 
     public static ClorastoreDatabase getInstance(String database, String token) {
         if (INSTANCE == null) {
             INSTANCE = new ClorastoreDatabase("");
-            var thread = new Thread(() -> DatabaseUtils.init(token, database));
-            thread.start();
-            try {
-                thread.join(2000);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
+            DatabaseUtils.init(token, database);
         }
         return INSTANCE;
     }

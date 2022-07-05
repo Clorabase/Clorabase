@@ -15,11 +15,15 @@ import java.util.concurrent.TimeUnit;
 
 public class CloremClient extends WebSocketClient {
     private String result;
+    private final String url;
+    private final Map<String,String> headers;
     private CountDownLatch latch;
     private Exception error;
 
     protected CloremClient(String url, Map<String, String> httpHeaders) {
         super(URI.create(url), httpHeaders);
+        this.url = url;
+        this.headers = httpHeaders;
     }
 
     @Override
@@ -71,8 +75,9 @@ public class CloremClient extends WebSocketClient {
             else
                 return result;
         } catch (WebsocketNotConnectedException e) {
-            if (connectBlocking(5, TimeUnit.SECONDS))
-                return sendMessage(jsonObject);
+            var client = new CloremClient(url,headers);
+            if (client.connectBlocking(5, TimeUnit.SECONDS))
+                return client.sendMessage(jsonObject);
             else
                 throw new IllegalStateException("Could not connect to database. Please check your internet connection and try again.");
         }

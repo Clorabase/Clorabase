@@ -20,7 +20,6 @@ import com.clorabase.R;
 
 import org.json.JSONObject;
 
-import java.io.IOException;
 import java.net.URL;
 
 import apis.xcoder.easydrive.EasyDrive;
