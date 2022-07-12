@@ -31,7 +31,7 @@ allprojects {
 In module **build.gradle**
 ```
 	dependencies {
-	               implementation 'com.github.ErrorxCode:Clorabase:v1.6-beta-4'
+	               implementation 'com.github.ErrorxCode:Clorabase:v1.8'
 	}
 ```
 
