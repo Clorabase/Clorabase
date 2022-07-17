@@ -15,6 +15,7 @@ import com.google.android.gms.tasks.Task;
 import com.google.android.gms.tasks.Tasks;
 
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.lang.ref.WeakReference;
@@ -297,9 +298,21 @@ public class CloremDatabase {
         while (iterator.hasNext()) {
             String key = iterator.next();
             Object opt = jsonObject.opt(key);
-            map.put(key, opt instanceof JSONObject ? asMap((JSONObject) opt) : opt);
+            map.put(key, opt instanceof JSONObject ? asMap((JSONObject) opt) : opt instanceof JSONArray array ? asList(array) : opt);
         }
         return map;
+    }
+
+    private List<Object> asList(JSONArray array) {
+        var list = new ArrayList<>();
+        try {
+            for (int i = 0; i < array.length(); i++) {
+                list.add(array.get(i));
+            }
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        return list;
     }
 
     /**
