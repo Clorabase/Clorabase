@@ -1,0 +1,15 @@
+R_DEF: Internal format may change without notice
+local
+drawable banner
+id banner
+id close
+id description
+id download
+id icon
+id image
+id message
+id ok
+id progressBar
+id title
+layout simple_dialog
+layout update_dialog
