@@ -20,8 +20,10 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import db.clorabase.clorem.Clorem;
 import db.clorabase.clorem.Node;
@@ -68,10 +70,15 @@ public class CloremDatabase {
                     .connectTimeout(15, TimeUnit.SECONDS)
                     .readTimeout(10,TimeUnit.SECONDS)
                     .build();
+
             AndroidNetworking.initialize(context,client);
-            boolean success = AndroidNetworking.get(INSTANCE.BASE_URL + "/init").build().executeForOkHttpResponse().isSuccess();
-            if (!success)
-                throw new RuntimeException("Failed to initialize database");
+            try {
+                var res = INSTANCE.executor.submit(() -> AndroidNetworking.get(INSTANCE.BASE_URL + "/init").build().executeForString()).get(10, TimeUnit.SECONDS);
+                if (!res.isSuccess())
+                    throw new RuntimeException("Failed to initialize database",res.getError());
+            } catch (ExecutionException | InterruptedException | TimeoutException e) {
+                throw new RuntimeException("Failed to initialize database",e);
+            }
         }
         return INSTANCE;
     }
