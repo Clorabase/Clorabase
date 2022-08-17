@@ -11,8 +11,10 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
 
+import com.clorabase.clorastore.Document;
 import com.clorabase.console.MainActivity;
 import com.clorabase.console.R;
+import com.clorabase.console.Utils;
 import com.clorabase.console.adapters.UpdateListAdapter;
 import com.clorabase.console.databinding.DialogAddUpdateBinding;
 import com.clorabase.console.databinding.FragmentUpdatesBinding;
@@ -21,33 +23,34 @@ import com.google.android.material.snackbar.Snackbar;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.List;
-
-import apis.xcoder.easydrive.AsyncTask;
-import db.clorabase.clorem.Node;
+import java.util.Map;
 
 public class UpdatesFragment extends Fragment {
     UpdateListAdapter adapter;
-    Node db;
+    Document doc = MainActivity.db.document("updates");
     List<Integer> codes = new ArrayList<>();
     public static List<String> ids;
-    List<String> packages;
-    List<String> names;
-    List<String> links;
-    List<String> versions;
+    List<String> packages = new ArrayList<>();
+    List<String> names = new ArrayList<>();
+    List<String> links = new ArrayList<>();
+    List<String> versions = new ArrayList<>();
+    Map<String,Object> data = doc.getData();
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         FragmentUpdatesBinding binding = FragmentUpdatesBinding.inflate(inflater);
 
-        db = MainActivity.db.node("Updater");
-        packages = db.getListString("packages");
-        names = db.getListString("names");
-        versions = db.getListString("versions");
-        ids = db.getListString("ids");
-        links = db.getListString("links");
-        adapter = new UpdateListAdapter(getContext(), names, links, versions);
+        if (data.size() > 3) {
+            packages = (List<String>) data.get("packages");
+            names = (List<String>) data.get("names");
+            versions = (List<String>) data.get("versions");
+            ids = (List<String>) data.get("ids");
+            links = (List<String>) data.get("links");
+        }
+        adapter = new UpdateListAdapter(getContext(),packages, names, links, versions);
         ImageView image = new ImageView(getContext());
 
         image.setImageResource(R.drawable.empty_list);
@@ -65,7 +68,7 @@ public class UpdatesFragment extends Fragment {
                         String version = dialog.version.getText().toString();
                         String link = dialog.link.getText().toString();
                         int code = Integer.parseInt(dialog.versionCode.getText().toString());
-                        if (packages.contains(packageName)) {
+                        if (packages != null && packages.contains(packageName)) {
                             Toast.makeText(getContext(), "App already exist", Toast.LENGTH_SHORT).show();
                         } else {
                             Snackbar.make(getActivity().findViewById(android.R.id.content), "Adding versioned app...", Snackbar.LENGTH_LONG).show();
@@ -76,22 +79,32 @@ public class UpdatesFragment extends Fragment {
                                 object.put("link", link);
                                 object.put("mode", "flexible");
 
-                                MainActivity.configureFeature(getContext(), packageName + "/versions.json", call -> {
-                                    if (call.isSuccessful) {
-                                        ids.add(call.result);
-                                        MainActivity.updateFile(getContext(), call.result, object.toString(), task -> {
-                                            if (task.isSuccessful){
-                                                Snackbar.make(getActivity().findViewById(android.R.id.content), "App added", Snackbar.LENGTH_LONG).show();
-                                                addData2list(name,packageName,code,version,link);
-                                            }
-                                            else
-                                                Toast.makeText(getContext(), "Failed to add app. Error 0xUFE", Toast.LENGTH_SHORT).show();
-                                        });
-                                    } else
-                                        Toast.makeText(getContext(), "Failed to add app. Error 0xCFE", Toast.LENGTH_SHORT).show();
+                                Utils.update(object.toString().getBytes(), name + "/version.json", new Utils.AsyncCallback() {
+                                    @Override
+                                    public void onComplete() {
+                                        Toast.makeText(getContext(), "App version added", Toast.LENGTH_SHORT).show();
+                                        addData2list(name,packageName,code,version,link);
+                                    }
+
+                                    @Override
+                                    public void onError(Exception e) {
+                                        if (e instanceof FileNotFoundException)
+                                            Utils.create(object.toString().getBytes(), MainActivity.CURRENT_PROJECT + "/updates/" + packageName + ".json", new Utils.AsyncCallback() {
+                                                @Override
+                                                public void onComplete() {
+                                                    addData2list(name,packageName,code,version,link);
+                                                    Toast.makeText(getContext(), "App version added", Toast.LENGTH_SHORT).show();
+                                                }
+
+                                                @Override
+                                                public void onError(Exception e) {
+                                                    Toast.makeText(getContext(), "Error adding app", Toast.LENGTH_SHORT).show();
+                                                }
+                                            });
+                                    }
                                 });
                             } catch (JSONException ignored) {
-
+                                Toast.makeText(getContext(), "Impossible glitch!", Toast.LENGTH_SHORT).show();
                             }
                         }
                     }).setNegativeButton("cancel", null).show();
@@ -105,11 +118,7 @@ public class UpdatesFragment extends Fragment {
         codes.add(code);
         versions.add(version);
         links.add(link);
-        db.put("packages", packages);
-        db.put("names", names);
-        db.put("versions", versions);
-        db.put("ids", ids);
-        db.put("links", links);
+        doc.setData(data);
         adapter.notifyDataSetChanged();
     }
 }

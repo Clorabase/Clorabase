@@ -13,8 +13,8 @@ import android.widget.Toast;
 import androidx.appcompat.app.AlertDialog;
 
 import com.clorabase.console.MainActivity;
+import com.clorabase.console.Utils;
 import com.clorabase.console.databinding.ListUpdatesBinding;
-import com.clorabase.console.fragments.UpdatesFragment;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -23,11 +23,12 @@ import java.util.List;
 
 public class UpdateListAdapter extends BaseAdapter {
     private final Context context;
-    private final List<String> links, versions, names;
+    private final List<String> links, versions, names,packages;
 
-    public UpdateListAdapter(Context context, List<String> names, List<String> links, List<String> versions) {
+    public UpdateListAdapter(Context context,List<String> packages, List<String> names, List<String> links, List<String> versions) {
         this.context = context;
         this.names = names;
+        this.packages = packages;
         this.versions = versions;
         this.links = links;
     }
@@ -55,7 +56,6 @@ public class UpdateListAdapter extends BaseAdapter {
         binding.link.setText(links.get(position));
         binding.version.setText(versions.get(position));
 
-        binding.delete.setOnClickListener(v -> MainActivity.drive.delete(UpdatesFragment.ids.get(position)).setOnErrorCallback(e -> Toast.makeText(context, e.getMessage(), Toast.LENGTH_SHORT).show()));
         binding.update.setOnClickListener(v -> {
             EditText editText = new EditText(context);
             editText.setSingleLine(true);
@@ -69,24 +69,29 @@ public class UpdateListAdapter extends BaseAdapter {
                     .setMessage("Enter the new (latest) version code of your app.")
                     .setPositiveButton("ok", (dialog, which) -> {
                         int code = Integer.parseInt(editText.getText().toString());
-                        MainActivity.drive.getContent(UpdatesFragment.ids.get(position)).setOnSuccessCallback(bytes -> {
-                            try {
-                                JSONObject json = new JSONObject(new String(bytes));
-                                json.put("versionCode", code);
-                                json.put("name", names.get(position));
-                                json.put("mode", "flexible");
-                                json.put("link", links.get(position));
+                        var appName = names.get(position);
+                        JSONObject json = new JSONObject();
+                        try {
+                            json.put("versionCode", code);
+                            json.put("name",appName);
+                            json.put("mode", "flexible");
+                            json.put("link", links.get(position));
+                            Utils.update(json.toString().getBytes(), MainActivity.CURRENT_PROJECT + "/updates/" + packages.get(position) + ".json", new Utils.AsyncCallback() {
+                                @Override
+                                public void onComplete() {
+                                    versions.set(position, code + "");
+                                    notifyDataSetChanged();
+                                    Toast.makeText(context, "Version incremented", Toast.LENGTH_SHORT).show();
+                                }
 
-                                MainActivity.updateFile(context, UpdatesFragment.ids.get(position), json.toString(), call -> {
-                                    if (call.isSuccessful)
-                                        Toast.makeText(context, "version incremented", Toast.LENGTH_SHORT).show();
-                                    else
-                                        Toast.makeText(context, "error incrementing version", Toast.LENGTH_SHORT).show();
-                                });
-                            } catch (JSONException e) {
-                                e.printStackTrace();
-                            }
-                        }).setOnErrorCallback(e -> Toast.makeText(context, e.getMessage(), Toast.LENGTH_SHORT).show());
+                                @Override
+                                public void onError(Exception e) {
+                                    Toast.makeText(context, "Failed to increment version", Toast.LENGTH_SHORT).show();
+                                }
+                            });
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
                     }).setNegativeButton("cancel", null).show();
         });
         return binding.getRoot();

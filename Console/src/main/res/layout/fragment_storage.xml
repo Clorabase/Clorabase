@@ -4,66 +4,23 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:padding="10dp"
     tools:context=".fragments.StorageFragment">
 
-    <Spinner
-        android:id="@+id/packages"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="10dp"
-        android:layout_toLeftOf="@id/delete"
-        android:minHeight="48dp"
-        android:tooltipText="Your clorabase apps"
-        tools:ignore="SpeakableTextPresentCheck" />
-
-    <ImageButton
-        android:id="@+id/delete"
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/add_file"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentEnd="true"
-        android:background="@android:color/transparent"
-        android:minWidth="48dp"
-        android:minHeight="48dp"
-        android:tooltipText="Delete's the app from clorabase storage with its files"
-        app:srcCompat="@android:drawable/ic_menu_delete"
-        app:tint="@color/black"
+        android:layout_alignParentBottom="true"
+        android:layout_marginEnd="10dp"
+        android:layout_marginBottom="10dp"
+        android:src="@drawable/ic_upload"
+        android:tooltipText="Upload a new file"
         tools:ignore="SpeakableTextPresentCheck" />
 
-    <FrameLayout
+    <ListView
+        android:id="@+id/list"
         android:layout_width="match_parent"
-        android:layout_below="@id/packages"
-        android:layout_height="match_parent">
-
-        <ListView
-            android:id="@+id/list"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_marginTop="10dp" />
-
-        <com.google.android.material.floatingactionbutton.FloatingActionButton
-            android:id="@+id/add_package"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="bottom|end"
-            android:layout_marginEnd="10dp"
-            android:layout_marginBottom="10dp"
-            android:src="@drawable/ic_package"
-            android:tooltipText="Add a new app"
-            tools:ignore="SpeakableTextPresentCheck" />
-
-        <com.google.android.material.floatingactionbutton.FloatingActionButton
-            android:id="@+id/add_file"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="bottom|end"
-            android:layout_marginEnd="10dp"
-            android:layout_marginBottom="80dp"
-            android:src="@drawable/ic_upload"
-            android:tooltipText="Upload a new file"
-            tools:ignore="SpeakableTextPresentCheck" />
-
-    </FrameLayout>
+        android:layout_height="match_parent" />
 
 </RelativeLayout>

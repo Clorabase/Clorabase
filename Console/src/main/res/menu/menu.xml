@@ -5,4 +5,7 @@
         android:id="@+id/help"
         android:title="Help"
         app:showAsAction="never" />
+    <item
+        android:id="@+id/delete"
+        android:title="Delete project" />
 </menu>
