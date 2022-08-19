@@ -1,6 +1,8 @@
 package com.clorabase.console;
 
 import android.annotation.SuppressLint;
+import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
@@ -8,21 +10,17 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
 import androidx.core.view.GravityCompat;
+import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.Fragment;
 
-import com.clorabase.clorastore.Clorastore;
-import com.clorabase.clorastore.Collection;
-import com.clorabase.clorastore.Document;
 import com.clorabase.console.databinding.ActivityMainBinding;
 import com.clorabase.console.fragments.DatabaseFragment;
 import com.clorabase.console.fragments.HomeFragment;
@@ -31,19 +29,22 @@ import com.clorabase.console.fragments.PushFragment;
 import com.clorabase.console.fragments.StorageFragment;
 import com.clorabase.console.fragments.UpdatesFragment;
 import com.google.android.material.navigation.NavigationView;
+import com.xcoder.tasks.AsyncTask;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
+import java.security.GeneralSecurityException;
+
+import apis.xcoder.easydrive.EasyDrive;
+import db.clorabase.clorem.Clorem;
+import db.clorabase.clorem.Node;
 
 public class MainActivity extends AppCompatActivity {
+    public static final String TOKEN = "****************************";
     public Fragment fragment;
-    public static String CURRENT_PROJECT;
-    public static List<String> projects;
-    public volatile static Collection db;
-    private Document doc;
+    public static EasyDrive drive;
+    public volatile static Node db;
     public static NavigationView drawer;
-    public static ArrayAdapter<String> adapter;
+    public volatile static String clorabaseID;
 
     @SuppressLint("NonConstantResourceId")
     @Override
@@ -53,19 +54,16 @@ public class MainActivity extends AppCompatActivity {
         setContentView(binding.getRoot());
         setSupportActionBar(binding.toolbar);
 
-        drawer = binding.drawer;
-        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(this, binding.drawerLayout, binding.toolbar, R.string.app_name, R.string.app_name);
-        db = Clorastore.getInstance(getFilesDir(), "main").getDatabase();
-        doc = db.document("projects");
-        CURRENT_PROJECT = (String) doc.get("lastProject","");
-        projects = (List<String>) doc.get("names", new ArrayList<String>());
-        adapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, projects);
-
-        binding.projects.setAdapter(adapter);
-        binding.projects.setTag(false);
-        binding.projects.setSelection(projects.indexOf(CURRENT_PROJECT));
-        binding.drawerLayout.addDrawerListener(toggle);
+        DrawerLayout layout = findViewById(R.id.drawer_layout);
+        drawer = findViewById(R.id.drawer);
+        Toolbar toolbar = findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(this, layout, toolbar, R.string.app_name, R.string.app_name);
+        layout.addDrawerListener(toggle);
         toggle.syncState();
+        initClorabase();
+        if (savedInstanceState == null)
+            getSupportFragmentManager().beginTransaction().replace(R.id.fragment, new HomeFragment()).commit();
 
         NetworkInfo info = getSystemService(ConnectivityManager.class).getActiveNetworkInfo();
         if (info == null || !info.isConnected()) {
@@ -73,31 +71,9 @@ public class MainActivity extends AppCompatActivity {
             builder.setTitle("No internet connection");
             builder.setMessage("Please check your internet connection and try again.");
             builder.setPositiveButton("retry", (dialog, which) -> recreate());
-            builder.setNegativeButton("exit", (dialog, which) -> finish());
-            builder.setCancelable(false);
             builder.show();
-        } else {
-            Utils.init();
-            if (savedInstanceState == null)
-                getSupportFragmentManager().beginTransaction().replace(R.id.fragment, new HomeFragment()).commit();
+            return;
         }
-
-        binding.projects.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                CURRENT_PROJECT = projects.get(position);
-                doc.put("lastProject",CURRENT_PROJECT);
-                doc.put("names",projects);
-                if (binding.projects.getTag().equals(true))
-                    Toast.makeText(MainActivity.this, "Restart app to take effect", Toast.LENGTH_LONG).show();
-                binding.projects.setTag(true);
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {
-
-            }
-        });
 
         drawer.setNavigationItemSelectedListener(item -> {
             switch (item.getItemId()) {
@@ -128,7 +104,8 @@ public class MainActivity extends AppCompatActivity {
                 case R.id.nav_clorastore -> startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/ErrorxCode/ClorastoreDB")));
                 case R.id.nav_clorem -> startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/ErrorxCode/CloremDB")));
             }
-            binding.drawerLayout.closeDrawer(GravityCompat.START);
+
+            layout.closeDrawer(GravityCompat.START);
             if (fragment != null)
                 getSupportFragmentManager().beginTransaction().replace(R.id.fragment, fragment).commit();
 
@@ -136,6 +113,27 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    private void initClorabase(){
+        try {
+            db = Clorem.getInstance(getFilesDir(), "main").getDatabase();
+            System.out.println(db.getString("clorabaseRoot", "There is no id in database"));
+            drive = new EasyDrive("402416439097-j01jvkbrkjttqb1ugoopi4hu7bi94a3o.apps.googleusercontent.com", "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", TOKEN);
+            if (db.getString("clorabaseRoot", null) == null) {
+                drive.createFolder("Clorabase", null).setOnCompleteCallback(call -> {
+                    if (call.isSuccessful) {
+                        clorabaseID = call.result;
+                        db.put("clorabaseRoot", clorabaseID);
+                    } else {
+                        call.exception.printStackTrace();
+                    }
+                });
+            } else
+                clorabaseID = db.getString("clorabaseRoot", null);
+        } catch (GeneralSecurityException | IOException e) {
+            e.printStackTrace();
+            Toast.makeText(this, "Failed to connect to server", Toast.LENGTH_SHORT).show();
+        }
+    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -145,58 +143,58 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-        if (item.getItemId() == R.id.help){
-            String link = "";
-            if (fragment == null) {
-                fragment = getSupportFragmentManager().findFragmentByTag("currentFragment");
-            }
-            if (fragment == null)
-                link = "";
-            else if (fragment instanceof InAppFragment)
-                link = "/documents/inapp";
-            else if (fragment instanceof PushFragment)
-                link = "/documents/push";
-            else if (fragment instanceof StorageFragment)
-                link = "/documents/storage";
-            else if (fragment instanceof DatabaseFragment)
-                link = "/documents/database";
-
-            startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://errorxcode.github.io/docs/clorabase/index.html#" + link)));
-        } else if (item.getItemId() == R.id.delete){
-            AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
-            builder.setTitle("Delete project");
-            builder.setMessage("Are you sure you want to delete the project? It will delete all data and this action cannot be undone.");
-            builder.setPositiveButton("confirm", (dialog, which) -> {
-                projects.remove(CURRENT_PROJECT);
-                doc.put("names",projects);
-                adapter.notifyDataSetChanged();
-                delete(CURRENT_PROJECT);
-                Toast.makeText(this, "Project deleted", Toast.LENGTH_SHORT).show();
-            });
-            builder.setNegativeButton("cancel",null);
-            builder.setCancelable(false);
-            builder.show();
+        String link = "";
+        if (fragment == null){
+            fragment = getSupportFragmentManager().findFragmentByTag("currentFragment");
         }
+        if (fragment == null)
+            link = "";
+        else if (fragment instanceof InAppFragment)
+            link = "/documents/inapp";
+        else if (fragment instanceof PushFragment)
+            link = "/documents/push";
+        else if (fragment instanceof StorageFragment)
+            link = "/documents/storage";
+        else if (fragment instanceof DatabaseFragment)
+            link = "/documents/database";
+
+
+        startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://errorxcode.github.io/docs/clorabase/index.html#" + link)));
         return true;
     }
+
 
     @Override
     public void onBackPressed() {
         getSupportFragmentManager().beginTransaction().replace(R.id.fragment, new HomeFragment()).commit();
     }
 
-    public void delete(String dir) {
-       new Thread(() -> {
-           try {
-               for (var file : Utils.repo.getDirectoryContent(dir)){
-                   if (file.isFile())
-                       file.delete("Deleting project");
-                   else
-                       delete(file.getPath());
-               }
-           } catch (IOException e) {
-               e.printStackTrace();
-           }
-       }).start();
+    @Override
+    protected void onStop() {
+        super.onStop();
+        db.commit();
+    }
+
+    public static void configureFeature(Context context,String relativePath, AsyncTask.OnCompleteCallback<String> callback) {
+        if (relativePath.endsWith(".db") || relativePath.endsWith(".json"))
+            drive.createFileRecursively("clorabase/" + relativePath).setOnCompleteCallback(task -> ((Activity) context).runOnUiThread(() -> {
+                callback.onComplete(task);
+            }));
+        else
+            drive.createFolderRecursively("clorabase/" + relativePath).setOnCompleteCallback(task -> ((Activity) context).runOnUiThread(() -> {
+                callback.onComplete(task);
+            }));
+    }
+
+    public static void delete(Context context, String fileId, AsyncTask.OnCompleteCallback callback) {
+        drive.delete(fileId).setOnCompleteCallback(task -> ((Activity) context).runOnUiThread(() -> {
+            callback.onComplete(task);
+        }));
+    }
+
+    public static void updateFile(Context context,String fileId,String content, AsyncTask.OnCompleteCallback callback) {
+        drive.updateFile(fileId, content).setOnCompleteCallback(task -> ((Activity) context).runOnUiThread(() -> {
+            callback.onComplete(task);
+        }));
     }
 }

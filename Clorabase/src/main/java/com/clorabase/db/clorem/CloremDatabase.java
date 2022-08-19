@@ -2,13 +2,15 @@ package com.clorabase.db.clorem;
 
 import android.content.Context;
 import android.net.ConnectivityManager;
+import android.net.Network;
+import android.net.NetworkCapabilities;
 import android.net.NetworkInfo;
+import android.net.NetworkRequest;
+import android.os.Build;
 
 import androidx.annotation.NonNull;
 
-import com.androidnetworking.AndroidNetworking;
-import com.androidnetworking.common.ANResponse;
-import com.clorabase.GithubUtils;
+import com.clorabase.Constants;
 import com.google.android.gms.tasks.Task;
 import com.google.android.gms.tasks.Tasks;
 
@@ -16,19 +18,18 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 import db.clorabase.clorem.Clorem;
 import db.clorabase.clorem.Node;
-import okhttp3.OkHttpClient;
 
 /**
  * ClorabaseDatabase is the only main class for interacting with the Clorabase database. Clorabase serverless database uses
@@ -42,51 +43,93 @@ import okhttp3.OkHttpClient;
  * @since 1.0
  */
 public class CloremDatabase {
-    protected String BASE_URL;
-    protected String db_name;
-    protected Context context;
+    private static String DB_ID;
     protected Node node;
+    protected static WeakReference<Context> context;
+    protected static Node root;
     protected static CloremDatabase INSTANCE;
-    protected ExecutorService executor;
+    protected static ExecutorService executor;
+    protected static CloremClient database;
 
-    private CloremDatabase(Node node, Context context) {
-        this.node = node;
-        this.context = context.getApplicationContext();
+    private CloremDatabase(Node name) {
+        this.node = name;
     }
 
     /**
-     * Initialize the database. Does not does anything except initiating the class.
+     * Initialize the database synchronously. This method blocks the thread for at most 5 seconds until the database is initialized.
+     * If the database is not initialized successfully within 5 seconds, further calls to the class method will throw an exception. Only use if the
+     * internet is not slow and database size is not too large.
      *
-     * @param context any context, however, application's context will be used.
-     * @return ClorabaseDatabase instance with root node.
+     * @param context Activity context
+     * @param DB_ID   Database ID that you got from console
+     * @param token   Access token that you got from console
+     * @return ClorabaseDatabase instance
      */
-    public static synchronized CloremDatabase getInstance(@NonNull Context context,@NonNull String project) {
+    public static synchronized CloremDatabase getInstance(@NonNull Context context, @NonNull String DB_ID, @NonNull String token) {
         if (INSTANCE == null) {
-            if (!GithubUtils.exists(project + "/config.json"))
-                throw new IllegalStateException("Project does not exist. Please create a project from the console first");
-
-            var root = Clorem.getInstance(context.getFilesDir(), "clorabase").getDatabase();
-            INSTANCE = new CloremDatabase(root,context);
-            INSTANCE.db_name = project;
-            INSTANCE.BASE_URL = "https://clorabase.herokuapp.com/clorem/" + project;
-
-            var client = new OkHttpClient().newBuilder()
-                    .connectTimeout(15, TimeUnit.SECONDS)
-                    .readTimeout(10,TimeUnit.SECONDS)
-                    .build();
-
-            AndroidNetworking.initialize(context,client);
+            database = new CloremClient(Constants.DATABASE_BASE_URL, init(context, token,DB_ID));
             try {
-                var res = INSTANCE.executor.submit(() -> AndroidNetworking.get(INSTANCE.BASE_URL + "/init").build().executeForString()).get(10, TimeUnit.SECONDS);
-                if (!res.isSuccess())
-                    throw new RuntimeException("Failed to initialize database",res.getError());
-            } catch (ExecutionException | InterruptedException | TimeoutException e) {
-                throw new RuntimeException("Failed to initialize database",e);
+                boolean connected = database.connectBlocking(15, TimeUnit.SECONDS);
+                if (!connected)
+                    System.err.println("Connection to the database failed. Please check your internet connection.");
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
             }
         }
         return INSTANCE;
     }
 
+    /**
+     * Initialize the database asynchronously and returns the instance immediately.
+     * If the database failed to initialize or is not initialized yet, further calls
+     * to the class method will throw an exception. Only use if internet is slow or database size is too large.
+     *
+     * @param context Activity context
+     * @param DB_ID   Database ID that you got from console
+     * @param token   Access token that you got from console
+     * @return ClorabaseDatabase instance
+     */
+    public static synchronized CloremDatabase getInstanceAsync(@NonNull Context context, @NonNull String DB_ID, @NonNull String token) {
+        if (INSTANCE == null) {
+            database = new CloremClient(Constants.DATABASE_BASE_URL, init(context, token, DB_ID));
+            database.connect();
+        }
+        return INSTANCE;
+    }
+
+    private static Map<String, String> init(Context context, String token, String db_id) {
+        root = Clorem.getInstance(context.getFilesDir(), "clorabase").getDatabase();
+        INSTANCE = new CloremDatabase(root);
+        DB_ID = db_id;
+        executor = Executors.newCachedThreadPool();
+        CloremDatabase.context = new WeakReference<>(context);
+        Map<String, String> headers = new HashMap<>();
+        headers.put("Client-ID", Constants.CLIENT_ID);
+        headers.put("Client-Secret", Constants.CLIENT_SECRET);
+        headers.put("DB-ID", CloremDatabase.DB_ID);
+        headers.put("Access-Token", token);
+
+        ConnectivityManager.NetworkCallback networkCallback = new ConnectivityManager.NetworkCallback() {
+            @Override
+            public void onAvailable(Network network) {
+                getInstanceAsync(context, CloremDatabase.DB_ID, token);
+            }
+
+            @Override
+            public void onLost(Network network) {
+                System.err.print("Connection to the database lost. We will reconnect it when the network is available.");
+            }
+        };
+
+        ConnectivityManager connectivityManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            connectivityManager.registerDefaultNetworkCallback(networkCallback);
+        } else {
+            NetworkRequest request = new NetworkRequest.Builder().addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET).build();
+            connectivityManager.registerNetworkCallback(request, networkCallback);
+        }
+        return headers;
+    }
 
     /**
      * Goes to the specified node. If the node does not exist, it will be created.
@@ -95,7 +138,7 @@ public class CloremDatabase {
      * @return Same instance with the new node
      */
     public CloremDatabase node(String name) {
-        return new CloremDatabase(node.node(name), context);
+        return new CloremDatabase(node.node(name));
     }
 
     /**
@@ -106,14 +149,12 @@ public class CloremDatabase {
     public Task<Map<String, Object>> getData() {
         return Tasks.call(executor, () -> {
             if (hasInternet()) {
-                ANResponse<JSONObject> response = AndroidNetworking.get(BASE_URL)
-                        .addQueryParameter("node", this.node.getPath())
-                        .build()
-                        .executeForJSONObject();
-                if (response.isSuccess())
-                    return asMap(response.getResult());
-                else
-                    throw new Exception(response.getOkHttpResponse().message());
+                JSONObject json = new JSONObject();
+                json.put("node", node.getPath());
+                json.put("method", "getData");
+                json.put("id", DB_ID);
+                JSONObject jsonObject = new JSONObject(database.sendMessage(json));
+                return asMap(jsonObject);
             } else
                 return this.node.getData();
         });
@@ -125,20 +166,17 @@ public class CloremDatabase {
      * @param data Map<String, Object> that contains the data to be inserted
      * @return Task<String> that contains the response  of the operation
      */
-    public Task<Void> setData(Map<String, Object> data) {
+    public Task<String> setData(Map<String, Object> data) {
         node.put(data);
         node.commit();
         return Tasks.call(executor, () -> {
             if (hasInternet()) {
-                var response = AndroidNetworking.patch(BASE_URL)
-                        .addQueryParameter("node",node.getPath())
-                        .addJSONObjectBody(new JSONObject(data))
-                        .build()
-                        .executeForOkHttpResponse();
-                if (response.isSuccess())
-                    return null;
-                else
-                    throw new Exception("Unexpected error occurred, this should not occur generally. If it happens again and again, create a issue on github");
+                JSONObject json = new JSONObject();
+                json.put("method", "putData");
+                json.put("node", node.getPath());
+                json.put("data", new JSONObject(data));
+                json.put("id", DB_ID);
+                return database.sendMessage(json);
             } else
                 throw new Exception("No internet connection");
         });
@@ -148,20 +186,16 @@ public class CloremDatabase {
      * Delete a underlying nested node within the current node.
      *
      * @param node Name or relative path (from current node) of the node to be deleted
-     * @return Task<Void> holding result
+     * @return Task<String> that contains the response of the operation
      */
-    public Task<Void> delete(@NonNull String node) {
+    public Task<String> delete(@NonNull String node) {
         this.node.delete(node);
         return Tasks.call(executor, () -> {
             if (hasInternet()) {
-                var response = AndroidNetworking.delete(BASE_URL)
-                        .addQueryParameter("node",node)
-                        .build()
-                        .executeForOkHttpResponse();
-                if (!response.isSuccess())
-                    throw new Exception("Cannot delete the node. Make sure it exists");
-                else
-                    return null;
+                JSONObject json = new JSONObject();
+                json.put("method", "delete");
+                json.put("node", node);
+                return database.sendMessage(json);
             } else
                 throw new Exception("No internet connection");
         });
@@ -177,18 +211,13 @@ public class CloremDatabase {
         List<Map<String, Object>> result = new ArrayList<>();
         return Tasks.call(executor, () -> {
             if (hasInternet()) {
-                ANResponse<JSONArray> response = (ANResponse<JSONArray>) AndroidNetworking.get(BASE_URL)
-                        .addQueryParameter("node",node.getPath())
-                        .addQueryParameter("query",query)
-                        .build()
-                        .executeForJSONArray();
-                if (response.isSuccess()){
-                    var resultList = new ArrayList<Map<String,Object>>();
-                    var jsonArray = response.getResult();
-                    for (int i = 0; i < jsonArray.length(); i++) {
-                        resultList.add(asMap(jsonArray.getJSONObject(i)));
-                    }
-                    return resultList;
+                JSONObject json = new JSONObject();
+                json.put("method", "query");
+                json.put("node", node.getPath());
+                json.put("query", query);
+                JSONArray jsonArray = new JSONArray(database.sendMessage(json));
+                for (int i = 0; i < jsonArray.length(); i++) {
+                    result.add(asMap((jsonArray.getJSONObject(i))));
                 }
                 return result;
             } else {
@@ -201,68 +230,64 @@ public class CloremDatabase {
         });
     }
 
-//    /**
-//     * Insert a new item to the list. If the value type is not same as the items of the list, operation will fail.
-//     *
-//     * @param key   Key of list (within the current node)
-//     * @param value The item to be inserted
-//     * @return Task<String> that contains the response of the operation
-//     */
-//    public Task<String> addItem(@NonNull String key, @NonNull Object value) {
-//        return Tasks.call(executor, () -> {
-//            if (hasInternet()) {
-//                JSONObject json = new JSONObject();
-//                json.put("method", "addItem");
-//                json.put("node", node.getPath());
-//                json.put("key", key);
-//                json.put("value", value);
-//                return database.sendMessage(json);
-//            } else
-//                throw new Exception("No internet connection");
-//        });
-//    }
-//
-//    /**
-//     * Removes an item from the list.
-//     *
-//     * @param key   Key of list (which is in the current node)
-//     * @param index Index of the item to be removed
-//     * @return Task<String> that contains the response of the operation
-//     */
-//    public Task<String> removeItem(@NonNull String key, int index) {
-//        return Tasks.call(executor, () -> {
-//            if (hasInternet()) {
-//                JSONObject json = new JSONObject();
-//                json.put("method", "removeItem");
-//                json.put("node", node.getPath());
-//                json.put("key", key);
-//                json.put("index", index);
-//                return database.sendMessage(json);
-//            } else
-//                throw new Exception("No internet connection");
-//        });
-//    }
+    /**
+     * Insert a new item to the list. If the value type is not same as the items of the list, operation will fail.
+     *
+     * @param key   Key of list (within the current node)
+     * @param value The item to be inserted
+     * @return Task<String> that contains the response of the operation
+     */
+    public Task<String> addItem(@NonNull String key, @NonNull Object value) {
+        return Tasks.call(executor, () -> {
+            if (hasInternet()) {
+                JSONObject json = new JSONObject();
+                json.put("method", "addItem");
+                json.put("node", node.getPath());
+                json.put("key", key);
+                json.put("value", value);
+                return database.sendMessage(json);
+            } else
+                throw new Exception("No internet connection");
+        });
+    }
 
     /**
-     * Forces the server to push the changes to the database. Should not be used if it is not necessary.
+     * Removes an item from the list.
+     *
+     * @param key   Key of list (which is in the current node)
+     * @param index Index of the item to be removed
+     * @return Task<String> that contains the response of the operation
+     */
+    public Task<String> removeItem(@NonNull String key, int index) {
+        return Tasks.call(executor, () -> {
+            if (hasInternet()) {
+                JSONObject json = new JSONObject();
+                json.put("method", "removeItem");
+                json.put("node", node.getPath());
+                json.put("key", key);
+                json.put("index", index);
+                return database.sendMessage(json);
+            } else
+                throw new Exception("No internet connection");
+        });
+    }
+
+    /**
+     * Forces the server to push the database to the drive. Should not be used if it is not necessary.
      *
      * @return Task<String> that contains the response of the operation
      */
-    public Task<Void> forceCommit() {
+    public Task<String> forceCommit() {
         return Tasks.call(executor, () -> {
             if (hasInternet()) {
-                var response = AndroidNetworking.get(BASE_URL + "/commit").build().executeForOkHttpResponse();
-                if (response.isSuccess())
-                    return null;
-                else
-                    throw new Exception("Force commit failed ! The server will automatically try to commit the changes after some times");
+                return database.sendMessage(new JSONObject("{\"method\":\"commit\"}"));
             } else
                 throw new Exception("No internet connection");
         });
     }
 
     private boolean hasInternet() {
-        NetworkInfo info = context.getSystemService(ConnectivityManager.class).getActiveNetworkInfo();
+        NetworkInfo info = context.get().getSystemService(ConnectivityManager.class).getActiveNetworkInfo();
         return info != null && info.isConnected();
     }
 
@@ -297,6 +322,6 @@ public class CloremDatabase {
      * @return The {@link Node} reference
      */
     public Node getReference(Map<String, Object> data) {
-        return node.node((String) data.get("_address"));
+        return root.node((String) data.get("_address"));
     }
 }

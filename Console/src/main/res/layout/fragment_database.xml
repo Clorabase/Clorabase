@@ -1,19 +1,27 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".fragments.DatabaseFragment">
 
-    <TextView
-        android:id="@+id/database_view"
+
+    <ListView
+        android:id="@+id/apps_list"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:fontFamily="monospace"
-        android:scrollbars="vertical|horizontal"
-        android:padding="10dp"
-        android:textSize="11sp"
-        android:textColor="@color/black"/>
+        android:tooltipText="This list shows no. of document in your app's node"></ListView>
 
-</RelativeLayout>
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/add"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:tooltipText="Add a new app"
+        android:layout_gravity="bottom|end"
+        android:layout_marginBottom="20dp"
+        android:layout_marginEnd="20dp"
+        android:src="@drawable/ic_add"
+        android:contentDescription="Add new app"
+        tools:ignore="HardcodedText" />
+
+</FrameLayout>

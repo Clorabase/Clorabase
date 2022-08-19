@@ -34,24 +34,24 @@ public class CredentialActivity extends AppCompatActivity {
                         Toast.makeText(this, "Please enter a package name", Toast.LENGTH_SHORT).show();
                     } else {
                         try {
-//                            String project = MainActivity.drive.getFileId(packageName,MainActivity.clorabaseID).getResult(50);
-                            if ("project" == null) {
+                            String project = MainActivity.drive.getFileId(packageName,MainActivity.clorabaseID).getResult(5);
+                            if (project == null) {
                                 Toast.makeText(this, "No project found for the package " + packageName, Toast.LENGTH_LONG).show();
                             } else {
-//                                var storage = MainActivity.drive.getFileId("Storage",project).getResult(5);
-//                                var updates = MainActivity.drive.getFileId("versions.json",project).getResult(5);
-//                                var messaging = MainActivity.drive.getFileId("messaging.json",project).getResult(5);
-//                                var database = MainActivity.drive.getFileId("clorabase.db",project).getResult(5);
-//                                if (storage != null)
-//                                    binding.storage.setText(storage);
-//                                if (database != null)
-//                                    binding.database.setText(database);
-//                                if (messaging != null)
-//                                    binding.messaging.setText(messaging);
-//                                if (updates != null)
-//                                    binding.updates.setText(updates);
-//
-//                                binding.token.setText(MainActivity.TOKEN);
+                                var storage = MainActivity.drive.getFileId("Storage",project).getResult(5);
+                                var updates = MainActivity.drive.getFileId("versions.json",project).getResult(5);
+                                var messaging = MainActivity.drive.getFileId("messaging.json",project).getResult(5);
+                                var database = MainActivity.drive.getFileId("clorabase.db",project).getResult(5);
+                                if (storage != null)
+                                    binding.storage.setText(storage);
+                                if (database != null)
+                                    binding.database.setText(database);
+                                if (messaging != null)
+                                    binding.messaging.setText(messaging);
+                                if (updates != null)
+                                    binding.updates.setText(updates);
+
+                                binding.token.setText(MainActivity.TOKEN);
                             }
                         } catch (Exception e) {
                             e.printStackTrace();

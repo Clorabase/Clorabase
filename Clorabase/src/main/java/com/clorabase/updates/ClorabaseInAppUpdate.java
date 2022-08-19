@@ -9,9 +9,20 @@ import android.net.Uri;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 
-import com.clorabase.GithubUtils;
+import com.clorabase.Constants;
 
 import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.security.GeneralSecurityException;
+import java.util.Map;
+
+import apis.xcoder.easydrive.EasyDrive;
 
 /**
  * This class is of App Update feature in Clorabase. Using this feature, you can inform users obout the new update.
@@ -26,24 +37,30 @@ public class ClorabaseInAppUpdate {
     /**
      * This will start the flow of checking and updating the app. Call this when you want to check for update
      *
-     * @param context The context of the activity.
-     * @param project The project that you have created from the console
+     * @param context   The context of the activity.
+     * @param token     Clorabase authorization token. Get it from console.
      */
-    public static void init(@NonNull Context context, @NonNull String project) {
-        GithubUtils.getFileAsJSON(project + "/updates/" + context.getPackageName() + ".json", json -> {
-            try {
-                int versionCode = json.getInt("versionCode");
-                String link = json.getString("link");
-                String mode = json.getString("mode");
+    public static void init(@NonNull Context context, @NonNull String token, @NonNull String engageId) {
+        try {
+            EasyDrive helper = new EasyDrive(Constants.CLIENT_ID,Constants.CLIENT_SECRET,token);
+            helper.getContent(engageId).setOnSuccessCallback(content -> {
+                try {
+                    JSONObject json = new JSONObject(new String(content));
+                    int versionCode = json.getInt("versionCode");
+                    String link = json.getString("link");
+                    String mode = json.getString("mode");
 
-                System.out.println(json.toString(3));
-                int currentVersion = context.getPackageManager().getPackageInfo(context.getPackageName(), PackageManager.GET_META_DATA).versionCode;
-                if (versionCode > currentVersion)
-                    ((Activity) context).runOnUiThread(() -> startUpdateFlow(context, mode, link));
-            } catch (PackageManager.NameNotFoundException | JSONException e) {
-                e.printStackTrace();
-            }
-        });
+                    System.out.println(json.toString(3));
+                    int currentVersion = context.getPackageManager().getPackageInfo(context.getPackageName(), PackageManager.GET_META_DATA).versionCode;
+                    if (versionCode > currentVersion)
+                        ((Activity) context).runOnUiThread(() -> startUpdateFlow(context, mode, link));
+                } catch (PackageManager.NameNotFoundException | JSONException e) {
+                    e.printStackTrace();
+                }
+            }).setOnErrorCallback(Throwable::printStackTrace);
+        } catch (GeneralSecurityException | IOException e) {
+            throw new IllegalArgumentException("Are you sure your token is valid?");
+        }
     }
 
 

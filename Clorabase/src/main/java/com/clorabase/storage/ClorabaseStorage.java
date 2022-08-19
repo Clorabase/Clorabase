@@ -1,25 +1,18 @@
 package com.clorabase.storage;
 
 
-import android.os.Handler;
-import android.os.Looper;
-
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
-import com.androidnetworking.AndroidNetworking;
-import com.androidnetworking.error.ANError;
-import com.androidnetworking.interfaces.DownloadListener;
-import com.androidnetworking.interfaces.JSONObjectRequestListener;
-import com.clorabase.GithubUtils;
-import com.jsoup.filescrapper.DriveException;
-import com.jsoup.filescrapper.FileScrapper;
-import com.jsoup.filescrapper.Provider;
-
-import org.json.JSONException;
-import org.json.JSONObject;
+import com.clorabase.Constants;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.security.GeneralSecurityException;
+
+import apis.xcoder.easydrive.EasyDrive;
 
 /**
  * ClorabaseStorage is a free place where you can upload and download files related to your apps.
@@ -28,117 +21,99 @@ import java.io.IOException;
  * @since Clorabase V1.0
  */
 public class ClorabaseStorage {
+    private final String id;
+    private final ClorabaseStorageCallback callback;
+    private final EasyDrive helper;
+
 
     /**
-     * Download's the file from the given file-id and save it in the given directory.
-     * The file is saved with the name of the file-id.
-     *
-     * @param directory Directory where the file will be saved.
-     * @param listener  Listener for the download progress.
+     * Gets the instance of the class. This instance may not be singleton.
+     * @param storageId The id of your storage bucket. You can get it from console.
      */
-    public static void download(@NonNull String project,@NonNull String filename, @NonNull File directory, @NonNull ClorabaseStorage.ClorabaseStorageCallback listener) {
-       new Thread(() -> {
-           try {
-               var link = FileScrapper.getDownloadLink(Provider.ANONFILES, "https://anonfiles.com/" + getFileId(project,filename));
-               AndroidNetworking.download(link, directory.getAbsolutePath(), filename)
-                       .setTag("download")
-                       .addHeaders("Accept-Encoding","compress")
-                       .build()
-                       .setDownloadProgressListener((downloaded, total) -> new Handler(Looper.getMainLooper()).post(() -> listener.onProgress((int) ((int) downloaded * 100 / total))))
-                       .startDownload(new DownloadListener() {
-                   @Override
-                   public void onDownloadComplete() {
-                       listener.onComplete();
-                   }
+    public ClorabaseStorage(@NonNull String storageId, @NonNull String token, @Nullable ClorabaseStorageCallback callback) {
+        try {
+            helper = new EasyDrive(Constants.CLIENT_ID,Constants.CLIENT_SECRET,token);
+            id = storageId;
+            this.callback = callback == null ? new ClorabaseStorageCallback() {
+                @Override
+                public void onFailed(@NonNull Exception e) {
 
-                   @Override
-                   public void onError(ANError anError) {
-                       System.out.println(anError.getErrorBody());
-                       listener.onFailed(anError);
-                   }
-               });
-           } catch (DriveException | Exception e) {
-               listener.onFailed(new Exception(e));
-           }
-       }).start();
-    }
-
-    private static String getFileId(@NonNull String project,@NonNull String filename) throws Exception {
-        var scanner = GithubUtils.getFileReader(project + "/storage.prop");
-        if (scanner == null)
-            return null;
-        else {
-            var fileId = "";
-            while (scanner.hasNextLine()) {
-                var line = scanner.nextLine();
-                if (line.contains(filename)) {
-                    fileId = line.split("=")[1];
-                    break;
                 }
-            }
-            scanner.close();
-            return fileId;
+
+                @Override
+                public void onProgress(int prcnt) {
+
+                }
+
+                @Override
+                public void onComplete(@NonNull String fileId) {
+
+                }
+            }: callback;
+        } catch (GeneralSecurityException | IOException e) {
+            throw new IllegalArgumentException("Are you sure your token is valid?");
         }
     }
 
     /**
-     * Uploads the file from the given directory to the given project storage bucket.
-     *
-     * @param project  Project name. Should be created in the Clorabase console.
-     * @param file     File to be uploaded.
-     * @param listener Listener for the upload progress and file-id of the uploaded file.
+     * Uploads file asynchronously to the Clorabase Storage. Progress & result (fileId) will
+     * be reported through callback passed in constructor.
+     * @param file The file to upload, your application must have permission to read this file.
      */
-    public static void upload(@NonNull String project, @NonNull File file, @NonNull ClorabaseStorageCallback listener) {
-        if (!GithubUtils.exists(project + "/storage.prop")) {
-            listener.onFailed(new IllegalStateException("Project storage bucket does not exist. Please configure storage from console"));
-            return;
-        }
-        AndroidNetworking.upload("https://api.anonfiles.com/upload?token=1e949238139b6cad")
-                .addMultipartFile("file", file)
-                .build()
-                .setUploadProgressListener((uploaded, total) -> listener.onProgress((int) (uploaded * 100 / total)))
-                .getAsJSONObject(new JSONObjectRequestListener() {
-                    @Override
-                    public void onResponse(JSONObject jsonObject) {
-                        new Thread(() -> {
-                            try {
-                                var id = jsonObject.getJSONObject("data").getJSONObject("file").getJSONObject("metadata").getString("id");
-                                GithubUtils.getFileContent(project + "/storage.prop", bytes -> {
-                                    var str = new String(bytes);
-                                    str += file.getName() + "=" + id + "\n";
-                                    try {
-                                        GithubUtils.github.getRepository("Clorabase-databases/CloremDatabases")
-                                                .getFileContent(project + "/storage.prop")
-                                                .update(str.getBytes(),"Deleting item from storage");
-                                        new Handler(Looper.getMainLooper()).post(listener::onComplete);
-                                    } catch (IOException e) {
-                                        e.printStackTrace();
-                                        new Handler(Looper.getMainLooper()).post(() -> listener.onFailed(e));
-                                    }
-                                });
-                            } catch (JSONException e) {
-                                e.printStackTrace();
-                                new Handler(Looper.getMainLooper()).post(() -> listener.onFailed(e));
-                            }
-                        }).start();
-                    }
+    public void upload(@NonNull File file){
+        try {
+            helper.uploadFile(file.getName(),new FileInputStream(file), id, new EasyDrive.ProgressListener() {
+                @Override
+                public void onProgress(int percentage) {
+                    callback.onProgress(percentage);
+                }
 
-                    @Override
-                    public void onError(ANError anError) {
-                        listener.onFailed(anError);
-                    }
-                });
+                @Override
+                public void onFinish(String fileId) {
+                    callback.onComplete(fileId);
+                }
+
+                @Override
+                public void onFailed(Exception e) {
+                    callback.onFailed(e);
+                }
+            });
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Download the file from ClorabaseStorage to the provided directory. Progress will be reported through callback passed in constructor
+     * @param fileId The ID of the file.
+     * @param directory The external directory where to save the file.
+     */
+    public void download(@NonNull String fileId,@NonNull File directory){
+        helper.download(fileId, directory.getPath(), new EasyDrive.ProgressListener() {
+            @Override
+            public void onProgress(int percentage) {
+                callback.onProgress(percentage);
+            }
+
+            @Override
+            public void onFinish(String fileId) {
+                callback.onComplete(fileId);
+            }
+
+            @Override
+            public void onFailed(Exception e) {
+                callback.onFailed(e);
+            }
+        });
     }
 
 
     /**
      * The interface that is used as a callback for the ClorabaseStorage operations.
      */
-    public interface ClorabaseStorageCallback {
+    public interface ClorabaseStorageCallback{
         void onFailed(@NonNull Exception e);
-
         void onProgress(int prcnt);
-
-        void onComplete();
+        void onComplete(@NonNull String fileId);
     }
 }

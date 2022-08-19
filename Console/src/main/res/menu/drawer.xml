@@ -30,7 +30,6 @@
         <item
             android:id="@+id/nav_tokens"
             android:icon="@drawable/ic_key"
-            android:visible="false"
             android:title="Credentials &amp; tokens" />
     </group>
 
@@ -43,10 +42,6 @@
             <item
                 android:id="@+id/nav_clorastore"
                 android:icon="@drawable/document"
-                android:title="Clorastore DB" />
-            <item
-                android:id="@+id/nav_clorograph"
-                android:icon="@drawable/ic_graph"
                 android:title="Clorastore DB" />
         </menu>
     </item>

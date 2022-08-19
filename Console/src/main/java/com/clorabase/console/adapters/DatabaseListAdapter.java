@@ -1,7 +1,6 @@
 package com.clorabase.console.adapters;
 
 import android.annotation.SuppressLint;
-import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
@@ -22,8 +21,6 @@ import com.clorabase.console.fragments.DatabaseFragment;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
 import java.util.List;
-
-import apis.xcoder.easydrive.AsyncTask;
 
 public class DatabaseListAdapter extends BaseAdapter {
     private final List<String> names;

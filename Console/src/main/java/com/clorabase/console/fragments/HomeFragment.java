@@ -6,13 +6,9 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.EditText;
-import android.widget.Spinner;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBar;
-import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
@@ -35,7 +31,6 @@ public class HomeFragment extends Fragment implements View.OnClickListener {
         binding.messaging.setOnClickListener(this);
         binding.push.setOnClickListener(this);
         binding.updates.setOnClickListener(this);
-        binding.addProject.setOnClickListener(this);
 
         return binding.getRoot();
     }
@@ -66,26 +61,6 @@ public class HomeFragment extends Fragment implements View.OnClickListener {
             drawer.setCheckedItem(R.id.nav_update);
             actionBar.setTitle("In-app updates");
             manager.replace(R.id.fragment,new UpdatesFragment(),"currentFragment").commit();
-        } else if (v == binding.addProject){
-            AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
-            builder.setTitle("Add project");
-            builder.setMessage("Enter the name of the project");
-            final EditText input = new EditText(getContext());
-            builder.setView(input);
-            builder.setPositiveButton("Add", (dialog, which) -> {
-                var project = input.getText().toString();
-                if (project.isEmpty()) {
-                    Toast.makeText(getContext(), "Project name cannot be empty", Toast.LENGTH_SHORT).show();
-                } else {
-                    MainActivity.projects.add(project);
-                    MainActivity.adapter.notifyDataSetChanged();
-                    MainActivity.CURRENT_PROJECT = project;
-                    var spinner = (Spinner) getActivity().findViewById(R.id.projects);
-                    spinner.setSelection(MainActivity.projects.size() - 1);
-                }
-            });
-            builder.setNegativeButton("Cancel", null);
-            builder.show();
         } else
             startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://errorxcode.github.io/docs/clorabase/index.html#")));
     }
