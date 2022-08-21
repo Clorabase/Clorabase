@@ -1,5 +1,7 @@
 package com.clorabase;
 
+import android.util.Base64;
+
 import androidx.core.util.Consumer;
 
 import com.clorabase.storage.ClorabaseStorage;
@@ -13,7 +15,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.util.Scanner;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -21,12 +22,12 @@ import java.util.concurrent.TimeoutException;
 
 public class GithubUtils {
     public static GitHub github;
-    public static Scanner scanner;
+    public static final String token = new String(Base64.decode("Z2hwX2dCM0xNdno1dWFVSTQxWFBSdTUwVU42YTMzSG9CWTBDVVBWeA==", Base64.DEFAULT));
     static {
         try {
-            github = GitHub.connectUsingOAuth("**********************");
+            github = GitHub.connectUsingOAuth(token);
         } catch (IOException e) {
-            e.printStackTrace();
+            throw new RuntimeException(e);
         }
     }
 

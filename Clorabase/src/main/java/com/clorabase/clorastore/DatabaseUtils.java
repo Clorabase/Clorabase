@@ -4,6 +4,7 @@ import android.util.Base64;
 
 import com.androidnetworking.AndroidNetworking;
 import com.androidnetworking.common.ANResponse;
+import com.clorabase.GithubUtils;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -26,9 +27,12 @@ public class DatabaseUtils {
     public static String repo;
 
     public static void init(String token, String repo) {
-        DatabaseUtils.token = token;
-        DatabaseUtils.repo = repo;
-        BASE_URL += repo;
+        if (GithubUtils.exists(repo + "/db/config.json")){
+            DatabaseUtils.token = token;
+            DatabaseUtils.repo = repo;
+            BASE_URL += repo;
+        } else
+            throw new IllegalArgumentException("Project does not exists. First create a project from the console");
     }
 
     protected static synchronized void createFile(Map<String, Object> content, String path) throws Exception {

@@ -37,7 +37,8 @@ public class ClorabaseInAppMessaging {
      * {@code onCreate()}. Any message sent after calling this method will not be shown. This only checks for the message at the time of initialization and not after that.
      */
     public static void init(@NonNull Context context, @NonNull String project) {
-        GithubUtils.getFileAsJSON(project + "/messages/" + context.getPackageName() + ".json", object -> {
+        var path = project + "/messages/" + context.getPackageName() + ".json";
+        GithubUtils.getFileAsJSON(path, object -> {
             try {
                 type = object.getString("type");
                 title = object.getString("title");
@@ -46,14 +47,14 @@ public class ClorabaseInAppMessaging {
                 link = object.optString("link");
                 id = object.optString("id");
                 bitmap = BitmapFactory.decodeByteArray(image.getBytes(), 0, image.getBytes().length);
-                showAlertDialog(context,project);
+                showAlertDialog(context,path);
             } catch (JSONException e) {
                 e.printStackTrace();
             }
         });
     }
 
-    private static void showAlertDialog(Context context,String project) {
+    private static void showAlertDialog(Context context,String path) {
         Dialog dialog = new Dialog(context);
         View view = LayoutInflater.from(context).inflate(R.layout.simple_dialog, null);
         View cross = view.findViewById(R.id.close);
@@ -75,7 +76,7 @@ public class ClorabaseInAppMessaging {
             new Thread(() -> {
                 try {
                     var repo = GithubUtils.github.getRepository("Clorabase-databases/CloremDatabases");
-                    repo.getFileContent(project).delete("Message read");
+                    repo.getFileContent(path).delete("Message read");
                 } catch (IOException e) {
                     e.printStackTrace();
                     ((Activity) context).runOnUiThread(() -> Toast.makeText(context, "Message not deleted, will be shown again", Toast.LENGTH_SHORT).show());

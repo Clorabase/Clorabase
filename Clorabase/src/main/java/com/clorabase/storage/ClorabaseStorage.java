@@ -44,7 +44,7 @@ public class ClorabaseStorage {
                 .addQueryParameter("owner", "Clorabase-databases")
                 .addQueryParameter("repo", "CloremDatabases")
                 .addQueryParameter("path", project + "/Storage/" + file.getName())
-                .addQueryParameter("token", "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")
+                .addQueryParameter("token", GithubUtils.token)
                 .build()
                 .getAsOkHttpResponse(new OkHttpResponseListener() {
                     @Override

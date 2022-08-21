@@ -2,6 +2,7 @@ package com.clorabase.clorastore;
 
 import androidx.core.util.Predicate;
 
+import com.clorabase.GithubUtils;
 import com.google.android.gms.tasks.Task;
 import com.google.android.gms.tasks.Tasks;
 
@@ -31,10 +32,10 @@ public class ClorastoreDatabase {
         PATH += name + "/";
     }
 
-    public static ClorastoreDatabase getInstance(String project, String token) {
+    public static ClorastoreDatabase getInstance(String project) {
         if (INSTANCE == null) {
             INSTANCE = new ClorastoreDatabase(project + "/db");
-            DatabaseUtils.init(token, "CloremDatabases");
+            DatabaseUtils.init(GithubUtils.token, "CloremDatabases");
         }
         return INSTANCE;
     }
