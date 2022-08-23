@@ -29,8 +29,8 @@ public class DatabaseUtils {
     public static void init(String token, String repo) {
         if (GithubUtils.exists(repo + "/db/config.json")){
             DatabaseUtils.token = token;
-            DatabaseUtils.repo = repo;
-            BASE_URL += repo;
+            DatabaseUtils.repo = "CloremDatabases";
+            BASE_URL += "CloremDatabases";
         } else
             throw new IllegalArgumentException("Project does not exists. First create a project from the console");
     }
