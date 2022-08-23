@@ -31,9 +31,10 @@ allprojects {
 In module **build.gradle**
 ```
 	dependencies {
-	               implementation 'com.github.ErrorxCode:Clorabase:v1.8-beta-7'
+	               implementation 'com.github.ErrorxCode:Clorabase:tag'
 	}
 ```
+[![](https://jitpack.io/v/ErrorxCode/Clorabase.svg)](https://jitpack.io/#ErrorxCode/Clorabase)
 
 ### Documentation
 - [User guide](https://docs.clorabase.tk)
