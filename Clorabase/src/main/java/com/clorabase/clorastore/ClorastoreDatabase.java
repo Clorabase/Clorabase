@@ -35,7 +35,7 @@ public class ClorastoreDatabase {
     public static ClorastoreDatabase getInstance(String project) {
         if (INSTANCE == null) {
             INSTANCE = new ClorastoreDatabase(project + "/db");
-            DatabaseUtils.init(GithubUtils.token, "CloremDatabases");
+            DatabaseUtils.init(GithubUtils.token,project);
         }
         return INSTANCE;
     }
