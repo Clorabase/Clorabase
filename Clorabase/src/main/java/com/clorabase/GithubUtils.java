@@ -21,14 +21,16 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 public class GithubUtils {
-    public static GitHub github;
+    public static volatile GitHub github;
     public static final String token = new String(Base64.decode("Z2hwX2dCM0xNdno1dWFVSTQxWFBSdTUwVU42YTMzSG9CWTBDVVBWeA==", Base64.DEFAULT));
     static {
-        try {
-            github = GitHub.connectUsingOAuth(token);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        new Thread(() -> {
+            try {
+                github = GitHub.connectUsingOAuth(token);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }).start();
     }
 
     public static void getFileAsJSON(String path, Consumer<JSONObject> callable){
