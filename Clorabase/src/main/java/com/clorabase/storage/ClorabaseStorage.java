@@ -40,26 +40,27 @@ public class ClorabaseStorage {
      * @param listener Listener for the upload progress and file-id of the uploaded file.
      */
     public static void upload(@NonNull String project, @NonNull File file, @NonNull ClorabaseStorageCallback listener) {
-        AndroidNetworking.post("https://clorabase.herokuapp.com/github/upload")
+        AndroidNetworking.upload("https://clorabase.herokuapp.com/github/upload")
                 .addQueryParameter("owner", "Clorabase-databases")
                 .addQueryParameter("repo", "CloremDatabases")
                 .addQueryParameter("path", project + "/Storage/" + file.getName())
                 .addQueryParameter("token", GithubUtils.token)
+                .addMultipartFile("file",file)
                 .build()
-                .getAsOkHttpResponse(new OkHttpResponseListener() {
-                    @Override
-                    public void onResponse(Response response) {
-                        if (response.isSuccessful())
-                            listener.onComplete();
-                        else
-                            listener.onFailed(new Exception("Failed to upload file to server. Error code : " + response.code()));
-                    }
+                .setUploadProgressListener((l, l1) -> listener.onProgress((int) ((l*100)/l1))).getAsOkHttpResponse(new OkHttpResponseListener() {
+            @Override
+            public void onResponse(Response response) {
+                if (response.isSuccessful())
+                    listener.onComplete();
+                else 
+                    listener.onFailed(new Exception(response.message()));
+            }
 
-                    @Override
-                    public void onError(ANError anError) {
-                        listener.onFailed(anError);
-                    }
-                });
+            @Override
+            public void onError(ANError anError) {
+                listener.onFailed(anError);
+            }
+        });
     }
 
     public static void delete(@NonNull String project, @NonNull String filename, @NonNull ClorabaseStorageCallback listener) {
