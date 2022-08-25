@@ -163,6 +163,30 @@ public class DatabaseUtils {
         var iterator = object.keys();
         while (iterator.hasNext()) {
             var key = iterator.next();
+            var value = object.get(key);
+            if (value instanceof JSONObject obj)
+                map.put(key,asMap(obj));
+            else if (value instanceof JSONArray array){
+                if (array.length() == 0)
+                    map.put(key,new ArrayList<>());
+                else {
+                    List list;
+                    var clazz = array.get(0);
+                    if (clazz instanceof String)
+                        list = new ArrayList<String>();
+                    else if (clazz instanceof Boolean)
+                        list = new ArrayList<Boolean>();
+                    else if (clazz instanceof Number)
+                        list = new ArrayList<Number>();
+                    else 
+                        throw new IllegalStateException("Invalid data in document");
+                    
+                    for (int i = 0; i < array.length(); i++) {
+                        list.add(i);
+                    }
+                    map.put(key,list);
+                }
+            }
             map.put(key, object.get(key));
         }
         return map;
