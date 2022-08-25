@@ -44,10 +44,10 @@ See the table below to campare clorabase and firebase with their features.
 
 | Usage                     | Clorabase | Firebase |
 | -----------               |-----------|----------|
-| Large storage (>10GB)       | Yes       | No      |
-| Large database (>512MB)         | No        | Yes      |
-| Unlimited push notification| Yes        | No      |
-| In-app messaging         | No        | Yes      |
+| Unlimited storage      | Yes       | Yes      |
+| Unlimited database     | Yes        | No      |
+| Push notification		| No        | Yes      |
+| In-app messaging         | Yes        | Yes      |
 | In-app update             | Yes        | Absent   |
 | Authentication             | Absent | Yes|
 
