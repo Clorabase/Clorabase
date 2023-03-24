@@ -58,7 +58,7 @@ The rule of thumb is, if you’re building a small project or dedicated mobile a
 
 ## BETA TESTING
 **This is currently in beta testing and does not represent final quality. You may find bugs,crashes or other issues. Please report it to us.**
-To participate in beta testing, email us at [inboxrahil@xcoder.tk]() or DM [@x__coder__x](https://www.instagram.com/x__coder__x/) on instagram.
+To participate in beta testing, email us at [contact@clorabase.tk]() or DM [@x0.rahil](https://www.instagram.com/x0.rahil/) on instagram.
 We will put your name in beta contributors and testers.
 
 **NOTE :** You will get console after you request for testing.
