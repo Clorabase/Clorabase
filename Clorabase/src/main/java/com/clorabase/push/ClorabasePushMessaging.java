@@ -24,10 +24,10 @@ public class ClorabasePushMessaging {
      *
      * @param context Applications context.
      */
-    public static void init(@NonNull Context context, @Nullable OnNotificationClicked callback) {
+    public static void init(@NonNull Context context,@NonNull String tag, @Nullable OnNotificationClicked callback) {
         OneSignal.initWithContext(context);
         OneSignal.setAppId("eb9c7891-3211-4a18-9317-6316897e837f");
-        OneSignal.setExternalUserId(context.getPackageName());
+        OneSignal.setExternalUserId(context.getPackageName() + ":" + tag);
         if (callback != null)
             OneSignal.setNotificationOpenedHandler(result -> callback.onClick(toMap(result.getNotification().getAdditionalData())));
     }

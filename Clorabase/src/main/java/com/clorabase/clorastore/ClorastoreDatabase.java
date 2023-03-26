@@ -1,5 +1,7 @@
 package com.clorabase.clorastore;
 
+import android.util.Base64;
+
 import androidx.core.util.Predicate;
 
 import com.clorabase.GithubUtils;
@@ -32,10 +34,11 @@ public class ClorastoreDatabase {
         PATH += name + "/";
     }
 
-    public static ClorastoreDatabase getInstance(String project) {
+    public static ClorastoreDatabase getInstance(String projectId) {
+        var project = GithubUtils.getProjectById(projectId);
         if (INSTANCE == null) {
             INSTANCE = new ClorastoreDatabase(project + "/db");
-            DatabaseUtils.init(GithubUtils.token,project);
+            DatabaseUtils.init(GithubUtils.token, project);
         }
         return INSTANCE;
     }
@@ -69,7 +72,7 @@ public class ClorastoreDatabase {
     }
 
     /**
-     * Creates or updates documents with the provided data as its fields. This is used for batch writing to the database.
+     * Creates or updates documents with the provided data as its fields(mao). This is used for batch writing to the database.
      *
      * @param name_then_fields Alternate varargs of name & fields for the documents
      * @return A final {@link Tasks} indicating the success or failure of the operation.
@@ -99,7 +102,8 @@ public class ClorastoreDatabase {
     }
 
     /**
-     * Deletes the collection or document with this name.
+     * Deletes the collection or document with this name. The deletion process
+     * might take time on the servers to replicate and update the database.
      *
      * @param name The name of the collection or document
      * @return A empty {@link Tasks}.

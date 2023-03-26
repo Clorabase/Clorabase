@@ -27,16 +27,16 @@ public class ClorabaseInAppUpdate {
      * This will start the flow of checking and updating the app. Call this when you want to check for update
      *
      * @param context The context of the activity.
-     * @param project The project that you have created from the console
+     * @param projectId The project id that you have created from the console
      */
-    public static void init(@NonNull Context context, @NonNull String project) {
+    public static void init(@NonNull Context context, @NonNull String projectId) {
+        var project = GithubUtils.getProjectById(projectId);
         GithubUtils.getFileAsJSON(project + "/updates/" + context.getPackageName() + ".json", json -> {
             try {
                 int versionCode = json.getInt("versionCode");
                 String link = json.getString("link");
                 String mode = json.getString("mode");
 
-                System.out.println(json.toString(3));
                 int currentVersion = context.getPackageManager().getPackageInfo(context.getPackageName(), PackageManager.GET_META_DATA).versionCode;
                 if (versionCode > currentVersion)
                     ((Activity) context).runOnUiThread(() -> startUpdateFlow(context, mode, link));

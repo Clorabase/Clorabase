@@ -15,7 +15,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
-
 import com.clorabase.GithubUtils;
 import com.clorabase.R;
 
@@ -36,7 +35,8 @@ public class ClorabaseInAppMessaging {
      * This class is responsible for listening In-App events and displaying Messages on the screen, So you must call this in application's
      * {@code onCreate()}. Any message sent after calling this method will not be shown. This only checks for the message at the time of initialization and not after that.
      */
-    public static void init(@NonNull Context context, @NonNull String project) {
+    public static void init(@NonNull Context context, @NonNull String projectId) {
+        var project = GithubUtils.getProjectById(projectId);
         var path = project + "/messages/" + context.getPackageName() + ".json";
         GithubUtils.getFileAsJSON(path, object -> {
             try {
@@ -75,8 +75,7 @@ public class ClorabaseInAppMessaging {
         ok.setOnClickListener(v -> {
             new Thread(() -> {
                 try {
-                    var repo = GithubUtils.github.getRepository("Clorabase-databases/CloremDatabases");
-                    repo.getFileContent(path).delete("Message read");
+                    GithubUtils.getRepository().getFileContent(path).delete("Message read");
                 } catch (IOException e) {
                     e.printStackTrace();
                     ((Activity) context).runOnUiThread(() -> Toast.makeText(context, "Message not deleted, will be shown again", Toast.LENGTH_SHORT).show());

@@ -3,15 +3,15 @@ package com.clorabase.storage;
 
 import androidx.annotation.NonNull;
 
-import com.androidnetworking.AndroidNetworking;
-import com.androidnetworking.error.ANError;
-import com.androidnetworking.interfaces.OkHttpResponseListener;
 import com.clorabase.GithubUtils;
 
-import java.io.File;
-import java.io.IOException;
+import org.kohsuke.github.GHFileNotFoundException;
 
-import okhttp3.Response;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.util.Date;
 
 /**
  * ClorabaseStorage is a free place where you can upload and download files related to your apps.
@@ -28,50 +28,48 @@ public class ClorabaseStorage {
      * @param directory Directory where the file will be saved.
      * @param listener  Listener for the download progress.
      */
-    public static void download(@NonNull String project,@NonNull String filename, @NonNull File directory, @NonNull ClorabaseStorage.ClorabaseStorageCallback listener) {
-        new Thread(() -> GithubUtils.download(directory,filename,project + "/Storage/" + filename,listener)).start();
+    public static void download(@NonNull String projectId, @NonNull String filename, @NonNull File directory, @NonNull ClorabaseStorage.ClorabaseStorageCallback listener) {
+        var project = GithubUtils.getProjectById(projectId);
+        new Thread(() -> GithubUtils.download(directory, filename, project + "/Storage/" + filename, listener)).start();
     }
 
     /**
      * Uploads the file from the given directory to the given project storage bucket.
      *
-     * @param project  Project name. Should be created in the Clorabase console.
      * @param file     File to be uploaded.
-     * @param listener Listener for the upload progress and file-id of the uploaded file.
+     * @param listener Listener for the success and failure of the upload.
      */
-    public static void upload(@NonNull String project, @NonNull File file, @NonNull ClorabaseStorageCallback listener) {
-        AndroidNetworking.upload("https://clorabase.herokuapp.com/github/upload")
-                .addQueryParameter("owner", "Clorabase-databases")
-                .addQueryParameter("repo", "CloremDatabases")
-                .addQueryParameter("path", project + "/Storage/" + file.getName())
-                .addQueryParameter("token", GithubUtils.token)
-                .addMultipartFile("file",file)
-                .build()
-                .setUploadProgressListener((l, l1) -> listener.onProgress((int) ((l*100)/l1))).getAsOkHttpResponse(new OkHttpResponseListener() {
-            @Override
-            public void onResponse(Response response) {
-                if (response.isSuccessful())
-                    listener.onComplete();
-                else 
-                    listener.onFailed(new Exception(response.message()));
-            }
-
-            @Override
-            public void onError(ANError anError) {
-                listener.onFailed(anError);
-            }
-        });
-    }
-
-    public static void delete(@NonNull String project, @NonNull String filename, @NonNull ClorabaseStorageCallback listener) {
+    public static void upload(@NonNull String projectId, @NonNull File file, @NonNull ClorabaseStorageCallback listener) {
+        var project = GithubUtils.getProjectById(projectId);
         new Thread(() -> {
             try {
-                GithubUtils.github.getRepository("Clorabase-databases/CloremDatabases")
-                        .getFileContent(project + "/Storage/" + filename)
-                        .delete("Deleted from the clorabase");
+                var in = new FileInputStream(file);
+                var content = new byte[(int) file.length()];
+                in.read(content);
+                in.close();
+                GithubUtils.getRepository().createContent()
+                        .content(content)
+                        .path(project + "/Storage/" + file.getName())
+                        .message("Uploaded on " + new Date())
+                        .commit();
                 listener.onComplete();
             } catch (IOException e) {
                 listener.onFailed(e);
+            }
+        }).start();
+    }
+
+    public static void delete(@NonNull String projectId, @NonNull String filename, @NonNull ClorabaseStorageCallback listener) {
+        var project = GithubUtils.getProjectById(projectId);
+        new Thread(() -> {
+            try {
+                GithubUtils.getRepository().getFileContent(project + "/Storage/" + filename).delete("Deleted from the clorabase");
+                listener.onComplete();
+            } catch (IOException e) {
+                if (e instanceof GHFileNotFoundException)
+                    listener.onFailed(new FileNotFoundException("There is no file present in your storage bucket with this name"));
+                else
+                    listener.onFailed(e);
             }
         }).start();
     }
@@ -82,8 +80,6 @@ public class ClorabaseStorage {
      */
     public interface ClorabaseStorageCallback {
         void onFailed(@NonNull Exception e);
-
-        void onProgress(int prcnt);
 
         void onComplete();
     }

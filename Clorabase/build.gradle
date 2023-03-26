@@ -10,8 +10,8 @@ android {
     defaultConfig {
         minSdkVersion 23
         targetSdkVersion 31
-        versionCode 21
-        versionName "2.1"
+        versionCode 25
+        versionName "2.5"
     }
 
     buildTypes {
@@ -34,9 +34,7 @@ android {
 
 dependencies {
     implementation 'com.onesignal:OneSignal:4.6.3'
-    implementation 'com.github.ErrorxCode:CloremDB:v2.9.1'
     implementation 'org.kohsuke:github-api:1.306'
-    implementation 'com.github.amitshekhariitbhu.Fast-Android-Networking:android-networking:v1.0.2'
     api 'com.google.android.gms:play-services-tasks:18.0.2'
-    implementation 'com.github.ErrorxCode:FileScrapper:1.0'
+    api project(path: ':ClorographDB')
 }

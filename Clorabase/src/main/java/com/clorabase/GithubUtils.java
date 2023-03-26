@@ -8,9 +8,11 @@ import com.clorabase.storage.ClorabaseStorage;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.kohsuke.github.GHRepository;
 import org.kohsuke.github.GitHub;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.HttpURLConnection;
@@ -21,22 +23,13 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 public class GithubUtils {
-    public static volatile GitHub github;
+    private static volatile GitHub github;
     public static final String token = new String(Base64.decode("Z2hwX2dCM0xNdno1dWFVSTQxWFBSdTUwVU42YTMzSG9CWTBDVVBWeA==", Base64.DEFAULT));
-    static {
-        new Thread(() -> {
-            try {
-                github = GitHub.connectUsingOAuth(token);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        }).start();
-    }
 
     public static void getFileAsJSON(String path, Consumer<JSONObject> callable){
         new Thread(() -> {
             try {
-                var connection = new URL("https://raw.githubusercontent.com/Clorabase-databases/CloremDatabases/main/" + path).openConnection();
+                var connection = new URL("https://raw.githubusercontent.com/Clorabase-databases/OpenDatabases/main/" + path).openConnection();
                 var in = connection.getInputStream();
                 byte[] buffer = new byte[connection.getContentLength()];
                 in.read(buffer);
@@ -52,7 +45,7 @@ public class GithubUtils {
         try {
             return Executors.newCachedThreadPool().submit(() -> {
                 try {
-                    var connection = (HttpURLConnection) new URL("https://raw.githubusercontent.com/Clorabase-databases/CloremDatabases/main/" + path).openConnection();
+                    var connection = (HttpURLConnection) new URL("https://raw.githubusercontent.com/Clorabase-databases/OpenDatabases/main/" + path).openConnection();
                     return connection.getResponseCode() != 404;
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -68,7 +61,7 @@ public class GithubUtils {
     public static void download(File directory, String filename, String path, ClorabaseStorage.ClorabaseStorageCallback callback) {
         new Thread(() -> {
             try {
-                var connection = new URL("https://raw.githubusercontent.com/Clorabase-databases/CloremDatabases/main/" + path).openConnection();
+                var connection = new URL("https://raw.githubusercontent.com/Clorabase-databases/OpenDatabases/main/" + path).openConnection();
                 connection.addRequestProperty("Accept-Encoding", "identity");
                 var in = connection.getInputStream();
                 var os = new FileOutputStream(new File(directory, filename));
@@ -86,5 +79,35 @@ public class GithubUtils {
                 callback.onFailed(e);
             }
         }).start();
+    }
+
+    public static void download(File directory,String filename,String path) throws IOException {
+        var connection = new URL("https://raw.githubusercontent.com/Clorabase-databases/OpenDatabases/main/" + path).openConnection();
+        connection.addRequestProperty("Accept-Encoding", "identity");
+        var in = connection.getInputStream();
+        var os = new FileOutputStream(new File(directory, filename));
+        byte[] buffer = new byte[1024];
+        int total = connection.getContentLength();
+        int read;
+        int current = 0;
+        while ((read = in.read(buffer)) != -1) {
+            current += read;
+            os.write(buffer, 0, read);
+        }
+    }
+
+    public static String getProjectById(String projectId) {
+        return new String(Base64.decode(projectId,Base64.DEFAULT));
+    }
+
+    public static GHRepository getRepository(){
+        try {
+            if (github == null) {
+                github = GitHub.connectUsingOAuth(token);
+            }
+            return github.getRepository("Clorabase-databases/OpenDatabases");
+        } catch (IOException e){
+            throw new RuntimeException(e);
+        }
     }
 }
