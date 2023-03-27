@@ -16,7 +16,7 @@ android {
 
     buildTypes {
         release {
-            minifyEnabled false
+            minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
@@ -36,5 +36,5 @@ dependencies {
     implementation 'com.onesignal:OneSignal:4.6.3'
     implementation 'org.kohsuke:github-api:1.306'
     api 'com.google.android.gms:play-services-tasks:18.0.2'
-    api project(path: ':ClorographDB')
+    api 'com.github.Clorabase:ClorographDB:1.5'
 }
