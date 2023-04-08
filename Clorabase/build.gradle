@@ -36,5 +36,5 @@ dependencies {
     implementation 'com.onesignal:OneSignal:4.6.3'
     implementation 'org.kohsuke:github-api:1.306'
     api 'com.google.android.gms:play-services-tasks:18.0.2'
-    api project(path: ':ClorographDB')
+    implementation 'com.github.ErrorxCode:ClorographDB:1.5'
 }
