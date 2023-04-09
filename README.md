@@ -31,7 +31,7 @@ allprojects {
 In module **build.gradle**
 ```
 	dependencies {
-	               implementation 'com.github.Clorabase:Clorabase:Tag'
+	               implementation 'com.github.Clorabase:Clorabase:0dcf08d456'
 	}
 ```
 [![](https://jitpack.io/v/Clorabase/Clorabase.svg)](https://jitpack.io/#Clorabase/Clorabase)
