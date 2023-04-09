@@ -34,7 +34,7 @@ In module **build.gradle**
 	               implementation 'com.github.ErrorxCode:Clorabase:tag'
 	}
 ```
-[![](https://jitpack.io/v/ErrorxCode/Clorabase.svg)](https://jitpack.io/#ErrorxCode/Clorabase)
+[![](https://jitpack.io/v/Clorabase/Clorabase.svg)](https://jitpack.io/#Clorabase/Clorabase)
 
 ### Documentation
 - [User guide](https://docs.clorabase.tk)
