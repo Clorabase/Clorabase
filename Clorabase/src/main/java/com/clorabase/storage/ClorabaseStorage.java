@@ -66,7 +66,7 @@ public class ClorabaseStorage {
         });
     }
 
-    public void upload(@NonNull String projectId,@NonNull java.io.File file,@Nullable ClorabaseStorageCallback callback) {
+    public static void upload(@NonNull String projectId,@NonNull java.io.File file,@Nullable ClorabaseStorageCallback callback) {
         var project = GithubUtils.getProjectById(projectId);
         executor.submit(() -> {
             try {
@@ -93,7 +93,7 @@ public class ClorabaseStorage {
         });
     }
 
-    public void delete(@NonNull String projectId,@NonNull String filename,@Nullable ClorabaseStorageCallback callback) {
+    public static void delete(@NonNull String projectId,@NonNull String filename,@Nullable ClorabaseStorageCallback callback) {
         var project = GithubUtils.getProjectById(projectId);
         executor.submit(() -> {
             try {
