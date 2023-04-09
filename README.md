@@ -31,7 +31,7 @@ allprojects {
 In module **build.gradle**
 ```
 	dependencies {
-	               implementation 'com.github.ErrorxCode:Clorabase:tag'
+	               implementation 'com.github.Clorabase:Clorabase:Tag'
 	}
 ```
 [![](https://jitpack.io/v/Clorabase/Clorabase.svg)](https://jitpack.io/#Clorabase/Clorabase)
@@ -44,9 +44,9 @@ See the table below to campare clorabase and firebase with their features.
 
 | Usage                     | Clorabase | Firebase |
 | -----------               |-----------|----------|
-| Unlimited storage      | Yes       | Yes      |
-| Unlimited database     | Yes        | No      |
-| Push notification		| No        | Yes      |
+| Large storage (>10GB)       | Yes       | No      |
+| Large database (>512MB)         | Yes        | Yes      |
+| Unlimited push notification| Yes        | No      |
 | In-app messaging         | Yes        | Yes      |
 | In-app update             | Yes        | Absent   |
 | Authentication             | Absent | Yes|
@@ -58,7 +58,8 @@ The rule of thumb is, if you’re building a small project or dedicated mobile a
 
 ## BETA TESTING
 **This is currently in beta testing and does not represent final quality. You may find bugs,crashes or other issues. Please report it to us.**
-To participate in beta testing, email us at [contact@clorabase.tk]() or DM [@x0.rahil](https://www.instagram.com/x0.rahil/) on instagram.
+To participate in beta testing, email us at [participate@rahilxcoder.tk]() or DM [@x0.rahil](https://www.instagram.com/x0.rahil/) on instagram.
 We will put your name in beta contributors and testers.
 
-**NOTE :** You will get console after you request for testing.
+### Console
+You can download the console from the accests of the latest release.
