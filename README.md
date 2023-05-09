@@ -37,7 +37,7 @@ In module **build.gradle**
 [![](https://jitpack.io/v/Clorabase/Clorabase.svg)](https://jitpack.io/#Clorabase/Clorabase)
 
 ### Documentation
-- [User guide](https://docs.clorabase.tk)
+- [User guide](https://errorxcode.github.io/docs/clorabase)
 
 ### When to use this instead of firebase
 See the table below to campare clorabase and firebase with their features.
