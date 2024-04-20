@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="20dp"
+    android:animateLayoutChanges="true"
+    tools:context=".AddProjectActivity">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Create or add existing project"
+        android:textSize="30sp"
+        android:textColor="@color/black"
+        android:fontFamily="@font/anton"
+        android:ems="7" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:layout_marginBottom="30dp"
+        android:maxEms="20"
+        android:text="Your project name will be used as the decryption key of your database"
+        android:textColor="@color/black" />
+
+    <EditText
+        android:id="@+id/project"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Enter project name"
+        android:minHeight="48dp"
+        android:singleLine="true"
+        android:textColorHint="#757575"
+        android:layout_marginBottom="10dp"/>
+
+
+    <CheckBox
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textColor="@color/black"
+        android:layout_marginTop="20dp"
+        android:text="Configure storage"
+        android:id="@+id/storage" />
+
+
+    <ProgressBar
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:visibility="gone"
+        android:id="@+id/progress"/>
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Create project"
+        android:id="@+id/add"
+        android:layout_marginTop="20dp"/>
+
+</LinearLayout>
