@@ -1,4 +1,4 @@
-<p align="center"><img alt="clorographDB" height="300" src="/favicon.png"></p>
+<p align="center"><img alt="clorographDB" height="350" width="350" src="/clorabase.png"></p>
 <p align="center">
   <img src="https://img.shields.io/github/license/ErrorxCode/Clorabase?style=for-the-badge">
   <img src="https://img.shields.io/github/stars/ErrorxCode/Clorabase?style=for-the-badge">
@@ -13,12 +13,7 @@
 </p>
 
 
-# Clorabase
-> Turn your GitHub into a backend
-
-
-
-### What it is
+### Clorabase
 Clorabase is a free backend alternative (BaaS) for Android apps that uses GitHub API to facilitate backend features. Clorabase is mostly made for small apps which has small backend/server/database requirements. If your app scales large or you need more database storage or bandwidth, Clorabase may not serve you. You should consider using [Firebase](https://firebase.google.com). Clorabase AIMS provides a money-free production-ready backend for building Android apps as a hobby or start-up. It is for those who don't earn money from their apps and build apps just for learning or non-profit use.
 
 ### Features
