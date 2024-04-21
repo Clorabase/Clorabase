@@ -5,6 +5,13 @@ plugins {
 }
 
 android {
+    publishing {
+        singleVariant('release') {
+            withSourcesJar()
+            withJavadocJar()
+        }
+    }
+    
     defaultConfig {
         compileSdk 33
         minSdkVersion 23
@@ -34,7 +41,7 @@ afterEvaluate {
     publishing {
         publications {
             release(MavenPublication) {
-                from components.java
+                from components.release
                 groupId = 'com.github.errorxcode'
                 artifactId = 'clorabase'
                 version = '3.0.2'
