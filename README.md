@@ -1,23 +1,38 @@
+<p align="center"><img alt="clorographDB" height="300" src="/clorabase/favicon.png"></p>
+<p align="center">
+  <img src="https://img.shields.io/github/license/ErrorxCode/Clorabase?style=for-the-badge">
+  <img src="https://img.shields.io/github/stars/ErrorxCode/Clorabase?style=for-the-badge">
+  <img src="https://img.shields.io/github/issues/ErrorxCode/Clorabase?color=red&style=for-the-badge">
+  <img src="https://img.shields.io/github/forks/ErrorxCode/Clorabase?color=teal&style=for-the-badge">
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/Author-Rahil--Khan-cyan?style=flat-square">
+  <img src="https://img.shields.io/badge/Open%20Source-Yes-cyan?style=flat-square">
+  <img src="https://img.shields.io/badge/Written%20In-Java-cyan?style=flat-square">
+</p>
+
+
 # Clorabase
-> A account-free backend for android apps.
+> Turn your GitHub into a backend
 
 
 
 ### What it is
-Clorabase is a free and backend alternative (BaaS) for android apps. Clorabase is mostly made for small apps which has small backend/server/database requirement. If your app scale large or you need more database storage or bandwidth, clorabase may not serve you. You should consider using [Firebase](https://firebase.google.com). Clorabase AIMS to provide a money-free production ready backend for building android apps as hobby or start-up. It is for those who don't earn money from their apps and build apps just for learning or non-profit use.
+Clorabase is a free backend alternative (BaaS) for Android apps that uses GitHub API to facilitate backend features. Clorabase is mostly made for small apps which has small backend/server/database requirements. If your app scales large or you need more database storage or bandwidth, Clorabase may not serve you. You should consider using [Firebase](https://firebase.google.com). Clorabase AIMS provides a money-free production-ready backend for building Android apps as a hobby or start-up. It is for those who don't earn money from their apps and build apps just for learning or non-profit use.
 
 ### Features
 - No account needed
 - Unlimited usage & quota
-- Absolutly Free, No paid plans
+- Absolutely Free, No paid plans
 - Serverless database
-- In-app messging
+- In-app messaging
 - In-app updates
 - Cloud storage for apps
 - Push messaging
 
 
-### Implimentation
+### Implementation
 #### To add SDK
 In your project **build.gradle**
 ```
@@ -31,16 +46,31 @@ allprojects {
 In module **build.gradle**
 ```
 	dependencies {
-	               implementation 'com.github.Clorabase:Clorabase:0dcf08d456'
+	               implementation 'com.github.Clorabase:Clorabase:v3.0.0'
 	}
 ```
+
 [![](https://jitpack.io/v/Clorabase/Clorabase.svg)](https://jitpack.io/#Clorabase/Clorabase)
 
-### Documentation
-- [User guide](https://errorxcode.github.io/docs/clorabase)
 
-### When to use this instead of firebase
-See the table below to campare clorabase and firebase with their features.
+#### To generate a GitHub OAuth token
+1. Goto [Create token](https://github.com/settings/tokens/new)
+2. Select the 'Classic' token type and set the expiry to 'No expiration'
+3. Check the following in the scope sections:
+   - delete_repo
+   - repo
+4. Click generate.
+
+Now you can use this token to access the console and SDK.
+
+⚠️**NOTE: Never publish your code containing this token on GitHub, if you did, then the token will automatically deleted and your code will break**
+
+
+### Documentation
+- [User guide](https://[docs.clorabase.tk](https://clorabase-docs.netlify.app/)
+
+### When to use this instead of Firebase
+See the table below to compare Clorabase and Firebase with their features.
 
 | Usage                     | Clorabase | Firebase |
 | -----------               |-----------|----------|
@@ -57,9 +87,9 @@ The rule of thumb is, if you’re building a small project or dedicated mobile a
 [Clorabase start-up]()
 
 ## BETA TESTING
-**This is currently in beta testing and does not represent final quality. You may find bugs,crashes or other issues. Please report it to us.**
-To participate in beta testing, email us at [participate@rahilxcoder.tk]() or DM [@x0.rahil](https://www.instagram.com/x0.rahil/) on instagram.
+**This is currently in beta testing and does not represent final quality. You may find bugs, crashes or other issues. Please report it to us.**
+To participate in beta testing, email us at [participate@itsrahil.me]() or DM [@x0.rahil](https://www.instagram.com/x0.rahil/) on Instagram.
 We will put your name in beta contributors and testers.
 
 ### Console
-You can download the console from the accests of the latest release.
+You can download the console from the assets of the latest release.
