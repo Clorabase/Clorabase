@@ -1,5 +1,6 @@
 plugins {
     id 'com.android.library'
+    id 'maven-publish'
     id 'com.onesignal.androidsdk.onesignal-gradle-plugin'
 }
 
@@ -27,6 +28,19 @@ android {
         resources.excludes.add("mozilla/*")
     }
     namespace 'com.clorabase'
+}
+
+afterEvaluate {
+    publishing {
+        publications {
+            release(MavenPublication) {
+                from components.release
+                groupId = 'com.github.errorxcode'
+                artifactId = 'clorabase'
+                version = '3.0.2'
+            }
+        }
+    }
 }
 
 dependencies {
