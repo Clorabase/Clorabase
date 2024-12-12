@@ -1,0 +1,58 @@
+plugins {
+    id 'com.android.library'
+}
+
+android {
+    compileSdk 34
+//    publishing {
+//        singleVariant('release') {
+//            withSourcesJar()
+//            withJavadocJar()
+//        }
+//    }
+    
+    defaultConfig {
+        minSdkVersion 24
+        targetSdkVersion 34
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled true
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    packagingOptions {
+        resources.excludes.add("META-INF/*")
+        resources.excludes.add("mozilla/*")
+    }
+    namespace 'sdk.clorabase'
+}
+
+// afterEvaluate {
+//     publishing {
+//         publications {
+//             release(MavenPublication) {
+//                 from components.release
+//                 groupId = 'com.github.errorxcode'
+//                 artifactId = 'clorabase'
+//                 version = '3.0.2'
+//             }
+//         }
+//     }
+// }
+
+dependencies {
+    implementation 'com.onesignal:OneSignal:4.6.3'
+    implementation 'org.kohsuke:github-api:1.306'
+    api 'com.google.android.gms:play-services-tasks:18.2.0'
+    implementation 'com.github.Clorabase:ClorastoreDB:2.5'
+    testImplementation(libs.robolectric)
+    testImplementation libs.junit
+
+}
