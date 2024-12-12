@@ -1,0 +1,32 @@
+<resources>
+    <string name="app_description">Clorabase is a free and backend alternative for android apps. Clorabase is mostly made for apps
+        which hardly requires online node and other android backend features. Although, this can also be used for the hybrid apps which often
+        uses node and other features but considering firebase for that will be more beneficial. As the limits or quota are based on the assumption
+        that the app will not fully depend on the server. The biggest advantage of using this instead of firebase for small apps is that you don\'t have
+        to build an account in order to use clorabase. Yes, this service does not need account.
+    </string>
+
+    <string name="description">A self-tout android developer, Mostly passionate about making developer life easier by building android libraries.</string>
+    <string name="document_notice">Note : The changes will not be reflected immediately. You may need to wait for a minute to see changes or new document</string>
+    <string name="database_info">Browse your database, add/delete/edit documents on the fly. Click on the document name to access in new window</string>
+    <string name="document_info">Click on the value field to change it. You can remove or add new field using below button. Make sure to save it through to toolbar</string>
+
+    <string-array name="actions">
+        <item>Open link</item>
+        <item>Start app</item>
+    </string-array>
+
+    <string-array name="data_types">
+        <item>String</item>
+        <item>Number</item>
+        <item>Boolean</item>
+        <item>Array</item>
+    </string-array>
+
+    <string-array name="messaging_types">
+        <item>Toast</item>
+        <item>AlertDialog</item>
+        <item>Notification</item>
+        <item>Runnable</item>
+    </string-array>
+</resources>
