@@ -5,12 +5,12 @@ plugins {
 
 android {
     compileSdk 34
-//    publishing {
-//        singleVariant('release') {
-//            withSourcesJar()
-//            withJavadocJar()
-//        }
-//    }
+   publishing {
+       singleVariant('release') {
+           withSourcesJar()
+           withJavadocJar()
+       }
+   }
     
     defaultConfig {
         minSdkVersion 24
