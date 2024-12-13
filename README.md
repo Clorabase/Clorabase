@@ -42,7 +42,7 @@ allprojects {
 In module **build.gradle**
 ```
 	dependencies {
-	               implementation 'com.github.Clorabase:Clorabase:TAG'
+	               implementation 'com.github.Clorabase:Clorabase:vTAG'
 	}
 ```
 
