@@ -34,18 +34,18 @@ android {
     namespace 'sdk.clorabase'
 }
 
-// afterEvaluate {
-//     publishing {
-//         publications {
-//             release(MavenPublication) {
-//                 from components.release
-//                 groupId = 'com.github.errorxcode'
-//                 artifactId = 'clorabase'
-//                 version = '3.0.2'
-//             }
-//         }
-//     }
-// }
+afterEvaluate {
+    publishing {
+        publications {
+            release(MavenPublication) {
+                from components.release
+                groupId = 'com.github.clorabase'
+                artifactId = 'clorabase'
+                version = '3.2'
+            }
+        }
+    }
+}
 
 dependencies {
     implementation 'com.onesignal:OneSignal:4.6.3'
