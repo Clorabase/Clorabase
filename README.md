@@ -18,13 +18,14 @@ Clorabase is a free backend alternative (BaaS) for Android apps that uses GitHub
 
 ### Features
 - No account needed
-- Unlimited usage & quota
+- Uses github usage & quota
 - Absolutely Free, No paid plans
 - Serverless database
 - In-app messaging
 - In-app updates
 - Cloud storage for apps
 - Push messaging
+- Turn your github into a backend
 
 
 ### Implementation
@@ -41,7 +42,7 @@ allprojects {
 In module **build.gradle**
 ```
 	dependencies {
-	               implementation 'com.github.Clorabase:Clorabase:v3.0.0'
+	               implementation 'com.github.Clorabase:Clorabase:v3.2'
 	}
 ```
 
@@ -62,7 +63,7 @@ Now you can use this token to access the console and SDK.
 
 
 ### Documentation
-- [User guide](https://[docs.clorabase.tk](https://clorabase-docs.netlify.app/)
+- [User guide](https://clorabase-docs.netlify.app/)
 
 ### When to use this instead of Firebase
 See the table below to compare Clorabase and Firebase with their features.
@@ -78,11 +79,10 @@ See the table below to compare Clorabase and Firebase with their features.
 
 The rule of thumb is, if you’re building a small project or dedicated mobile application, and you don’t mind the high bandwidth or database storage, Clorabase is a great place to start. If you’re looking for a more general-purpose data solution, value performance at scale and advanced querying, Firebase is going to serve your needs best.
 
-#### Example project
-[Clorabase start-up]()
 
-## BETA TESTING
-**This is currently in beta testing and does not represent final quality. You may find bugs, crashes or other issues. Please report it to us.**
+
+## NEED TESTERS
+**This is currently in testing phase and does not represent final quality. You may find bugs, crashes or other issues. Please report it to us.**
 To participate in beta testing, email us at [participate@itsrahil.me]() or DM [@x0.rahil](https://www.instagram.com/x0.rahil/) on Instagram.
 We will put your name in beta contributors and testers.
 
