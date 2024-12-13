@@ -52,7 +52,4 @@ dependencies {
     implementation 'org.kohsuke:github-api:1.306'
     api 'com.google.android.gms:play-services-tasks:18.2.0'
     implementation 'com.github.Clorabase:ClorastoreDB:2.5'
-    testImplementation(libs.robolectric)
-    testImplementation libs.junit
-
 }
