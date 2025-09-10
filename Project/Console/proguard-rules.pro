@@ -1,0 +1,34 @@
+# Please add these rules to your existing keep rules in order to suppress warnings.
+# This is generated automatically by the Android Gradle plugin.
+-dontwarn com.infradna.tool.bridge_method_injector.BridgeMethodsAdded
+-dontwarn com.infradna.tool.bridge_method_injector.WithBridgeMethods
+-dontwarn edu.umd.cs.findbugs.annotations.CheckForNull
+-dontwarn edu.umd.cs.findbugs.annotations.NonNull
+-dontwarn edu.umd.cs.findbugs.annotations.SuppressFBWarnings
+-dontwarn okhttp3.Cache
+-dontwarn okhttp3.CacheControl$Builder
+-dontwarn okhttp3.CacheControl
+-dontwarn okhttp3.Call
+-dontwarn okhttp3.Callback
+-dontwarn okhttp3.CipherSuite
+-dontwarn okhttp3.ConnectionSpec
+-dontwarn okhttp3.Dispatcher
+-dontwarn okhttp3.Handshake
+-dontwarn okhttp3.Headers$Builder
+-dontwarn okhttp3.Headers
+-dontwarn okhttp3.HttpUrl
+-dontwarn okhttp3.Interceptor
+-dontwarn okhttp3.OkHttpClient$Builder
+-dontwarn okhttp3.OkHttpClient
+-dontwarn okhttp3.Protocol
+-dontwarn okhttp3.Request$Builder
+-dontwarn okhttp3.Request
+-dontwarn okhttp3.RequestBody
+-dontwarn okhttp3.Response
+-dontwarn okhttp3.ResponseBody
+-dontwarn okio.Buffer
+-dontwarn okio.BufferedSink
+-dontwarn okio.Okio
+-dontwarn okio.Pipe
+-dontwarn okio.Sink
+-dontwarn okio.Timeout

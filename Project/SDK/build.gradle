@@ -1,0 +1,61 @@
+plugins {
+    id 'com.android.library'
+    id 'maven-publish'
+}
+
+group = 'com.github.clorabase'
+version = '0.5'
+
+android {
+    compileSdk 35
+
+    publishing {
+        singleVariant('release') {
+            withSourcesJar()
+            withJavadocJar()
+        }
+    }
+
+    defaultConfig {
+        minSdkVersion 29
+        targetSdkVersion 35
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled true
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_21
+        targetCompatibility JavaVersion.VERSION_21
+    }
+
+    packagingOptions {
+        resources.excludes.add("META-INF/*")
+        resources.excludes.add("mozilla/*")
+    }
+
+
+    namespace 'clorabase.sdk.android'
+}
+
+publishing {
+    publications {
+        release(MavenPublication) {
+            afterEvaluate {
+                from components.release
+            }
+        }
+    }
+}
+
+
+dependencies {
+    implementation libs.github.api
+    api project(':Clorabase4J')
+    api libs.play.services.tasks.v1820
+    implementation libs.clorastoredb
+    implementation libs.annotations
+}
