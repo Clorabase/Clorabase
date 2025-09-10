@@ -9,12 +9,12 @@ version = '0.5'
 android {
     compileSdk 35
 
-//    publishing {
-//        singleVariant('release') {
-//            withSourcesJar()
-//            withJavadocJar()
-//        }
-//    }
+   publishing {
+       singleVariant('release') {
+           withSourcesJar()
+           withJavadocJar()
+       }
+   }
     
     defaultConfig {
         minSdkVersion 29
@@ -38,17 +38,17 @@ android {
     }
 
 
-    publishing {
-        publications {
-            release(MavenPublication) {
-                groupId = 'com.github.clorabase'
-                artifactId = 'SDK'
-                version = '0.5'
+    namespace 'clorabase.sdk.android'
+}
+
+publishing {
+    publications {
+        release(MavenPublication) {
+            afterEvaluate {
+                from components.release
             }
         }
     }
-
-    namespace 'clorabase.sdk.android'
 }
 
 
@@ -58,3 +58,4 @@ dependencies {
     api libs.play.services.tasks.v1820
     implementation libs.clorastoredb
 }
+
