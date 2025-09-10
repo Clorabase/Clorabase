@@ -44,10 +44,6 @@ android {
                 groupId = 'com.github.clorabase'
                 artifactId = 'SDK'
                 version = '0.5'
-
-                afterEvaluate {
-                    from components.release
-                }
             }
         }
     }
