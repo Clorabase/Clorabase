@@ -1,6 +1,10 @@
 plugins {
     id 'com.android.library'
+    id 'maven-publish'
 }
+
+group = 'com.github.clorabase'
+version = '0.5'
 
 android {
     compileSdk 35
@@ -32,24 +36,27 @@ android {
         resources.excludes.add("META-INF/*")
         resources.excludes.add("mozilla/*")
     }
+
+
+    publishing {
+        publications {
+            release(MavenPublication) {
+                groupId = 'com.github.clorabase'
+                artifactId = 'SDK'
+                version = '0.5'
+
+                afterEvaluate {
+                    from components.release
+                }
+            }
+        }
+    }
+
     namespace 'clorabase.sdk.android'
 }
 
-// afterEvaluate {
-//     publishing {
-//         publications {
-//             release(MavenPublication) {
-//                 from components.release
-//                 groupId = 'com.github.errorxcode'
-//                 artifactId = 'clorabase'
-//                 version = '3.0.2'
-//             }
-//         }
-//     }
-// }
 
 dependencies {
-    implementation libs.onesignal
     implementation libs.github.api
     api project(':Clorabase4J')
     api libs.play.services.tasks.v1820
