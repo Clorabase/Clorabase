@@ -5,6 +5,4 @@ before_install:
   - sdk use java 23-open
   - jshell --version
   - java --version
-install:
-  - cd Project
 
