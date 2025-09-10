@@ -1,0 +1,57 @@
+plugins {
+    id 'com.android.library'
+}
+
+android {
+    compileSdk 35
+
+//    publishing {
+//        singleVariant('release') {
+//            withSourcesJar()
+//            withJavadocJar()
+//        }
+//    }
+    
+    defaultConfig {
+        minSdkVersion 29
+        targetSdkVersion 35
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled true
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_21
+        targetCompatibility JavaVersion.VERSION_21
+    }
+
+    packagingOptions {
+        resources.excludes.add("META-INF/*")
+        resources.excludes.add("mozilla/*")
+    }
+    namespace 'clorabase.sdk.android'
+}
+
+// afterEvaluate {
+//     publishing {
+//         publications {
+//             release(MavenPublication) {
+//                 from components.release
+//                 groupId = 'com.github.errorxcode'
+//                 artifactId = 'clorabase'
+//                 version = '3.0.2'
+//             }
+//         }
+//     }
+// }
+
+dependencies {
+    implementation libs.onesignal
+    implementation libs.github.api
+    api project(':Clorabase4J')
+    api libs.play.services.tasks.v1820
+    implementation libs.clorastoredb
+}
