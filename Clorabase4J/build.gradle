@@ -21,10 +21,6 @@ publishing {
             groupId = 'com.github.clorabase'
             artifactId = 'Clorabase4j'
             version = '0.5'
-
-            afterEvaluate {
-                from components.release
-            }
         }
     }
 }
