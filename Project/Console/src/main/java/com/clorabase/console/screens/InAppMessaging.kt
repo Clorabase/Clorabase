@@ -65,12 +65,11 @@ fun InAppMessagingScreen() {
     val context = LocalContext.current
     var title by remember { mutableStateOf("") }
     var message by remember { mutableStateOf("") }
-    var channel by remember { mutableStateOf("") }
     var link by remember { mutableStateOf("") }
     var imageBase64 by remember { mutableStateOf<String?>(null) }
     var isSending by remember { mutableStateOf(false) }
 
-    val isSendButtonEnabled = title.isNotBlank() && message.isNotBlank() && channel.isNotBlank()
+    val isSendButtonEnabled = title.isNotBlank() && message.isNotBlank()
     val coroutineScope = rememberCoroutineScope()
     val imagePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
@@ -97,7 +96,6 @@ fun InAppMessagingScreen() {
     fun resetForm() {
         title = ""
         message = ""
-        channel = ""
         link = ""
         imageBase64 = null
         isSending = false
@@ -116,7 +114,7 @@ fun InAppMessagingScreen() {
                 put("type", "simple")
             }
 
-            val path = "${Globals.currentProject.value}/messages/" + message.hashCode();
+            val path = "${Globals.currentProject.value}/messages/" + message.hashCode() + ".json";
             try {
                 GithubUtils.create(jsonObject.toString().toByteArray(), path)
                 resetForm()

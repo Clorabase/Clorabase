@@ -29,6 +29,10 @@
 -dontwarn okio.Buffer
 -dontwarn okio.BufferedSink
 -dontwarn okio.Okio
+-dontwarn javax.annotation.CheckForNull
+-dontwarn javax.annotation.Nonnull
+-dontwarn javax.annotation.Nullable
+-dontwarn javax.annotation.WillClose
 -dontwarn okio.Pipe
 -dontwarn okio.Sink
 -dontwarn okio.Timeout

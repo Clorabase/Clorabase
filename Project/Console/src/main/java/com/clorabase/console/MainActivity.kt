@@ -606,7 +606,7 @@ fun createProject(
     config.put("project", projectName)
     config.put("created", Date().toString())
     config.put("isStorageConfigured",configureStorage)
-    config.put("version", "0.4")
+    config.put("version", "0.5")
     config.put("storageBucketName",projectName)
 
 
@@ -616,12 +616,13 @@ fun createProject(
             if (configureStorage)
                 GithubUtils.repo.createRelease(projectName)
                     .name("$projectName Store room")
-                    .body(String(GithubUtils.getRaw("https://github.com/Clorabase/Clorabase/docs/release.md")))
+                    .body(String(GithubUtils.fetchBytes("https://raw.githubusercontent.com/Clorabase/Clorabase/refs/heads/main/docs/release.md")))
                     .create();
             withContext(Dispatchers.Main){
                 onSuccess()
             }
         } catch (e: IOException) {
+            e.printStackTrace()
             withContext(Dispatchers.Main) {
                 if (e is FileAlreadyExistsException)
                     onError("Project with this name already exists")

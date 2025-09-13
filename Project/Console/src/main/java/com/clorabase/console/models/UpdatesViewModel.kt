@@ -138,4 +138,18 @@ class UpdateViewModel : ViewModel() {
             onAppsFetched(apps);
         }
     }
+
+    fun deleteUpdate(packageName : String,onDelete : () -> Unit, onFailed: () -> Unit){
+        viewModelScope.launch(Dispatchers.IO) {
+            val base = Globals.currentProject.value + "/updates/" + packageName;
+            try {
+                GithubUtils.delete(base + "/version.json");
+                GithubUtils.delete(base + "/changelog.md");
+            } catch (e : FileNotFoundException){
+                onFailed();
+            } finally {
+                onDelete();
+            }
+        }
+    }
 }

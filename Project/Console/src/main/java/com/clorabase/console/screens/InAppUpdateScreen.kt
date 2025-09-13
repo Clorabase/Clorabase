@@ -12,12 +12,14 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -101,7 +103,8 @@ fun UpdateScreen() {
 @Composable
 fun AppsList(viewModel: UpdateViewModel, packageName: MutableState<String>) {
     var fetching by remember { mutableStateOf(false) };
-    val apps = remember { mutableStateOf(listOf("")) };
+    val apps = remember { mutableStateOf(listOf("temp")) };
+    val context = LocalContext.current;
 
     Column(Modifier.padding(16.dp)) {
         Text(
@@ -130,7 +133,15 @@ fun AppsList(viewModel: UpdateViewModel, packageName: MutableState<String>) {
                         packageName.value = it;
                     }, verticalAlignment = Alignment.CenterVertically) {
                         Icon(painter = painterResource(R.drawable.ic_android), tint = Color.Green, contentDescription = "App")
-                        Text(text = it, fontSize = 18.sp, modifier = Modifier.padding(6.dp).fillMaxWidth());
+                        Text(text = it, fontSize = 18.sp, modifier = Modifier.padding(6.dp));
+                        Spacer(Modifier.weight(1f))
+                        Icon(imageVector = Icons.Default.Delete, tint = Color.Black, contentDescription = "App", modifier = Modifier.clickable {
+                            viewModel.deleteUpdate(it,{
+                                apps.value = apps.value.filter { name -> name != it }
+                            },{
+                                Toast.makeText(context,"Failed to delete",Toast.LENGTH_SHORT).show();
+                            });
+                        })
                     }
                 }
             }
