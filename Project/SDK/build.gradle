@@ -45,7 +45,7 @@ publishing {
     publications {
         release(MavenPublication) {
             afterEvaluate {
-                from components.release
+                from components.findByName('release')
             }
         }
     }
@@ -59,3 +59,4 @@ dependencies {
     implementation libs.annotations
     implementation libs.appcompat
 }
+
