@@ -152,7 +152,7 @@ public class GithubUtils {
      * @return the raw contents of the file as a byte array
      * @throws IOException if there is an error fetching the file
      */
-    private static byte[] fetchBytes(String url) throws IOException {
+    public static byte[] fetchBytes(String url) throws IOException {
         var connection = new URL(url).openConnection();
         connection.addRequestProperty("Accept-Encoding", "identity");
         connection.addRequestProperty("accept", "application/json");
@@ -287,6 +287,7 @@ public class GithubUtils {
         if (!path.endsWith("/"))
             path = path + "/";
 
+
         var connection = new URL(Constants.TREE_PRIVATE_URL + path).openConnection();
         connection.addRequestProperty("accept", "application/json");
         StringBuilder str = new StringBuilder();
@@ -303,6 +304,7 @@ public class GithubUtils {
                 var next = keys.next();
                 var sha = json.getJSONObject(next).getString("oid");
                 var file = new GithubFile(next, path + next, sha);
+                file.rawUrl = Constants.BASE_RAW_URL + "main/" + path + next;
                 files.add(file);
             }
             return files;

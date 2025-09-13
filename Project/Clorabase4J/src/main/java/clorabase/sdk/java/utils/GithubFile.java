@@ -3,6 +3,7 @@ package clorabase.sdk.java.utils;
 public class GithubFile {
     private final String name;
     private final String path;
+    public String rawUrl;
     private final String sha;
     private final boolean isFile;
 
