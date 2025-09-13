@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
+import android.util.Base64;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
@@ -38,30 +39,34 @@ public class ClorabaseInAppMessaging {
      * This class is responsible for listening In-App events and displaying Messages on the screen, So you must call this in application's
      * {@code onCreate()}. Any message sent after calling this method will not be shown. This only checks for the message at the time of initialization and not after that.
      */
-    public static void init(@NonNull Context context, @NonNull String project, @NonNull String channel) {
-        var path = project + "/messages/" + channel + ".json";
+    public static void init(@NonNull Context context, @NonNull String project) {
+        var path = project + "/messages/";
 
         Executors.newSingleThreadExecutor().submit(() -> {
             try {
-                var raw = GithubUtils.getRaw(path);
-                var object = new JSONObject(new String(raw));
+                var msg = GithubUtils.listFiles(path).get(0);
+                var file = msg.rawUrl;
+                var object = GithubUtils.getJsonResponse(file);
                 type = object.getString("type");
                 title = object.getString("title");
                 message = object.getString("message");
                 image = object.optString("image");
                 link = object.optString("link");
                 id = object.optString("id");
-                bitmap = BitmapFactory.decodeByteArray(image.getBytes(), 0, image.getBytes().length);
-                context.getMainExecutor().execute(() -> showAlertDialog(context,path));
+                var decBytes = Base64.decode(image,Base64.DEFAULT);
+                bitmap = BitmapFactory.decodeByteArray(decBytes, 0, decBytes.length);
+                context.getMainExecutor().execute(() -> showAlertDialog(context,path + msg.getName()));
             } catch (IOException | JSONException e) {
                 throw new RuntimeException(e);
+            } catch (IndexOutOfBoundsException e){
+
             }
         });
     }
 
     private static void showAlertDialog(Context context,String path) {
         Dialog dialog = new Dialog(context);
-        View view = LayoutInflater.from(context).inflate(R.layout.simple_dialog, null);
+        View view = LayoutInflater.from(context).inflate(R.layout.simple_dialoge, null);
         View cross = view.findViewById(R.id.close);
         TextView title = view.findViewById(R.id.title);
         ImageView image = view.findViewById(R.id.image);
@@ -77,24 +82,25 @@ public class ClorabaseInAppMessaging {
         dialog.getWindow().setLayout(-1, -2);
         dialog.show();
 
-        ok.setOnClickListener(v -> {
-            new Thread(() -> {
-                try {
-                    GithubUtils.delete(path);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    ((Activity) context).runOnUiThread(() -> Toast.makeText(context, "Message not deleted, will be shown again", Toast.LENGTH_SHORT).show());
-                }
-            }).start();
-        });
-
         try {
             image.setImageBitmap(bitmap);
-            if (link != null)
-                context.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(link)));
         } catch (Exception e) {
             image.setVisibility(View.GONE);
             e.printStackTrace();
         }
+
+        ok.setOnClickListener(v -> {
+            dialog.dismiss();
+            new Thread(() -> {
+                try {
+                    if (link != null && !link.isBlank())
+                        context.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(link)));
+
+                    GithubUtils.delete(path);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }).start();
+        });
     }
 }

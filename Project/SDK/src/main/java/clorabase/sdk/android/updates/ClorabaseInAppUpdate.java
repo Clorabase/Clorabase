@@ -1,19 +1,20 @@
 package clorabase.sdk.android.updates;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
-import androidx.appcompat.app.AlertDialog;
 
+import org.jetbrains.annotations.NotNull;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.concurrent.Executors;
 
@@ -35,7 +36,7 @@ public class ClorabaseInAppUpdate {
      *
      * @param context   The context of the activity.
      */
-    public static void init(@NonNull Context context, @NonNull String project) {
+    public static void init(@NotNull Context context, @NonNull String project) {
         Executors.newSingleThreadExecutor().submit(() -> {
             try {
                 var raw = GithubUtils.getRaw(project + "/updates/" + context.getPackageName() + "/version.json");
@@ -47,11 +48,12 @@ public class ClorabaseInAppUpdate {
                 int currentVersion = context.getPackageManager().getPackageInfo(context.getPackageName(), PackageManager.GET_META_DATA).versionCode;
                 if (versionCode > currentVersion)
                     ((Activity) context).runOnUiThread(() -> startUpdateFlow(context, mode, link));
-
-            } catch (IOException | JSONException | PackageManager.NameNotFoundException e) {
-                context.getMainExecutor().execute(() -> {
-                    Toast.makeText(context, "Something went extremely wrong in-app update", Toast.LENGTH_LONG).show();
-                });
+            } catch ( JSONException | PackageManager.NameNotFoundException e) {
+                e.printStackTrace();
+                context.getMainExecutor().execute(() -> Toast.makeText(context, "Something went extremely wrong in-app update", Toast.LENGTH_LONG).show());
+            } catch (IOException e){
+                if (!(e instanceof FileNotFoundException))
+                    throw new RuntimeException(e);
             }
         });
     }

@@ -37,20 +37,13 @@ public class Clorabase {
      * @param project The project name you want to access.
      * @return The instance of Clorabase.
      */
-    public static Clorabase getInstance(@NotNull String username, @NotNull String token,@NotNull String project) {
+    public static Clorabase getInstance(@NotNull String username, @NotNull String token,@NotNull String project) throws Exception {
         if (instance == null) {
             if (username.isBlank() || token.isBlank() || project.isBlank()) {
                 throw new IllegalArgumentException("Username, token, and project must not be blank.");
             }
 
-            try {
-                instance = new Clorabase(token, project, username);
-            } catch (Exception e) {
-                if (e instanceof FileNotFoundException)
-                    throw new RuntimeException("Project does not exists. Please verify that the project with name " + project + " exists");
-                else
-                    throw new RuntimeException("Failed to initialize Clorabase. Error : " + e.getMessage());
-            }
+            instance = new Clorabase(token, project, username);
         }
         return instance;
     }
@@ -75,10 +68,9 @@ public class Clorabase {
     /**
      * Initialize the In-App messaging service with the given context and channel.
      * @param context The context of the application.
-     * @param channel The channel name to listen for messages.
      */
-    public void initInAppMessaging(Context context, String channel) {
-        ClorabaseInAppMessaging.init(context, clorabase4j.getConfig().project, channel);
+    public void initInAppMessaging(Context context) {
+        ClorabaseInAppMessaging.init(context, clorabase4j.getConfig().project);
     }
 
     /**

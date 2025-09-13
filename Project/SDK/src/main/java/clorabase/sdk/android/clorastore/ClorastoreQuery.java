@@ -29,7 +29,7 @@ public class ClorastoreQuery extends Query {
             try {
                 List<ClorastoreDocument> result = where(condition)
                         .stream()
-                        .map(doc -> new ClorastoreDocument(doc.path, doc.name))
+                        .map(doc -> new ClorastoreDocument(doc.getPath(), doc.name))
                         .collect(Collectors.toList());
                 mainHandler.post(() -> tcs.setResult(result));
             } catch (ClorastoreException e) {
@@ -45,7 +45,7 @@ public class ClorastoreQuery extends Query {
             try {
                 List<ClorastoreDocument> result = whereGreater(field, value)
                         .stream()
-                        .map(doc -> new ClorastoreDocument(doc.path, doc.name))
+                        .map(doc -> new ClorastoreDocument(doc.getPath(), doc.name))
                         .collect(Collectors.toList());
                 mainHandler.post(() -> tcs.setResult(result));
             } catch (ClorastoreException e) {
@@ -61,7 +61,7 @@ public class ClorastoreQuery extends Query {
             try {
                 List<ClorastoreDocument> result = whereLess(field, value)
                         .stream()
-                        .map(doc -> new ClorastoreDocument(doc.path, doc.name))
+                        .map(doc -> new ClorastoreDocument(doc.getPath(), doc.name))
                         .collect(Collectors.toList());
                 mainHandler.post(() -> tcs.setResult(result));
             } catch (ClorastoreException e) {
@@ -77,7 +77,7 @@ public class ClorastoreQuery extends Query {
             try {
                 List<ClorastoreDocument> result = whereEqual(field, value)
                         .stream()
-                        .map(doc -> new ClorastoreDocument(doc.path, doc.name))
+                        .map(doc -> new ClorastoreDocument(doc.getPath(), doc.name))
                         .collect(Collectors.toList());
                 mainHandler.post(() -> tcs.setResult(result));
             } catch (ClorastoreException e) {
@@ -93,7 +93,7 @@ public class ClorastoreQuery extends Query {
             try {
                 List<ClorastoreDocument> result = orderBy(field, limit)
                         .stream()
-                        .map(doc -> new ClorastoreDocument(doc.path, doc.name))
+                        .map(doc -> new ClorastoreDocument(doc.getPath(), doc.name))
                         .collect(Collectors.toList());
                 mainHandler.post(() -> tcs.setResult(result));
             } catch (ClorastoreException e) {

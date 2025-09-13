@@ -56,6 +56,6 @@ dependencies {
     implementation libs.github.api
     api project(':Clorabase4J')
     api libs.play.services.tasks.v1820
-    implementation libs.clorastoredb
     implementation libs.annotations
+    implementation libs.appcompat
 }
