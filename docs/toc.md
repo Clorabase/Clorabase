@@ -23,16 +23,9 @@
   - [Updating app](documents/update#incrementing-app-version)
 
 
-
-- Push notifications
-
-  - [Introduction](documents/push#push-notification)
-  - [Initializing](documents/push#initializing)
-  - [Sending push](documents/push#sending-push-notifiction)
-
-
 - In-app messaging
 
   - [Introduction](documents/inapp#in-app-messaging)
   - [Initializing](documents/inapp#initializing)
   - [Sending push](documents/inapp#sending-in-app-message)
+
