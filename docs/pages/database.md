@@ -29,7 +29,7 @@ To get your Oauth token, check the [Implementation](https://github.com/ErrorxCod
 
 > [!IMPORTANT] You can create a `README.md` file in a subdirectory to use it as the landing page for the route.
 
-> [!NOTE] 
+?> [!NOTE] 
 > **In Android SDK:** Every method has its `async` version and `non-async` version. All the async methods end with `async` and return `async`. Implementation of the class.  
 > **In the Java library:** There are only sync functions with the same name  
 
@@ -93,7 +93,7 @@ Querying data in **ClorastoreDB** is as easy as pie. You just have to pass a `Pr
   
 Suppose if your structure is like this (\*JSON representation of collection & it's document, where `users is the collection and each user` object is it's document\*):
 
-```plain
+```json
 {
   "users": [
     "user1": {
@@ -119,7 +119,7 @@ Suppose if your structure is like this (\*JSON representation of collection & it
 
 *   To get all the users whose age is greater than 18,
 
-```plain
+```java
 root.collection("users").query().whereGreater("age",18)
 ```
 
@@ -127,7 +127,7 @@ root.collection("users").query().whereGreater("age",18)
 
 *   To get users whose name start's with 'a'
 
-```plain
+```java
 db.collection("users").query().where(data -> data.get("name").toString().startsWith("a"));
 ```
 
@@ -136,7 +136,7 @@ db.collection("users").query().where(data -> data.get("name").toString().startsW
 
 *   To order data by a particular field (Ascending order)
 
-```plain
+```jva
 root.collection("users").query().orderBy("age",20);
 ```
 
@@ -144,6 +144,7 @@ root.collection("users").query().orderBy("age",20);
   
   
 _That's all that you need to know about the database._
+
 
 
 
