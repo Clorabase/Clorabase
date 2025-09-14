@@ -1,13 +1,14 @@
 ![logo](favicon.png)
 
-# Clorabase<small>3.0</small>
+# Clorabase<small>0.5 (Preview)</small>
 
-> Turn your Github into a Backend
+> Turn your GitHub into a No-SQL database
 
 - Simple and lightweight
 - Easy, manageable and accessible
-- Uses Github API
+- Uses GitHub API
 - Always free
 
 [Website](https://clorabase.netlify.app)
 [Get Started](#clorabase)
+
