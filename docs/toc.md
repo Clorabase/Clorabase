@@ -1,31 +1,32 @@
 - Database
 
-  - [Introduction](documents/database#clorabase-database)
-  - [Writing data](documents/database#writing-data)
-  - [Raading data](documents/database#reading-data)
-  - [Deleting data](documents/database#deleting-data)
-  - [Querying data](documents/database#querying-data)
+  - [Introduction](pages/database#clorabase-database)
+  - [Writing data](pages/database#writing-data)
+  - [Raading data](pages/database#reading-data)
+  - [Deleting data](pages/database#deleting-data)
+  - [Querying data](pages/database#querying-data)
 
 - Storage
 
-  - [Introduction](documents/storage#clorabase-storage)
-  - [Uploading](documents/storage#uploading-file-to-storage)
-  - [Downloading](documents/storage#downloading-file-from-storage)
-  - [Listing files](documents/storage#listing-files)
+  - [Introduction](pages/storage#clorabase-storage)
+  - [Uploading](pages/storage#uploading-file-to-storage)
+  - [Downloading](pages/storage#downloading-file-from-storage)
+  - [Listing files](pages/storage#listing-files)
 
 
 
 - Update
 
-  - [Introduction](documents/update#in-app-updates)
-  - [Initializing](documents/update#initializing-the-class)
-  - [Adding app](documents/update#adding-app-in-clorabase)
-  - [Updating app](documents/update#incrementing-app-version)
+  - [Introduction](pages/update#in-app-updates)
+  - [Initializing](pages/update#initializing-the-class)
+  - [Adding app](pages/update#adding-app-in-clorabase)
+  - [Updating app](pages/update#incrementing-app-version)
 
 
 - In-app messaging
 
-  - [Introduction](documents/inapp#in-app-messaging)
-  - [Initializing](documents/inapp#initializing)
-  - [Sending push](documents/inapp#sending-in-app-message)
+  - [Introduction](pages/inapp#in-app-messaging)
+  - [Initializing](pages/inapp#initializing)
+  - [Sending push](pages/inapp#sending-in-app-message)
+
 
