@@ -26,12 +26,12 @@ Collection root = clorabase.getDatabase();
 
   
 To get your Oauth token, check the [Implementation](https://github.com/ErrorxCode/docs/edit/main/clorabase/README.md#implementation) part of the README  
-  
-?> **Note**  
-**In Android SDK:**  
-Every method has its `async` version and `non-async` version. All the async methods end with `async` and return `async`. Implementation of the class.  
-**In Java library:**  
-There are only sync functions with the same name  
+
+[!NOTE] 
+> **In Android SDK:**  
+> Every method has its `async` version and `non-async` version. All the async methods end with `async` and return `async`. Implementation of the class.  
+> **In Java library:**  
+> There are only sync functions with the same name  
 
 ### Writing/Updating data
 
@@ -144,5 +144,6 @@ root.collection("users").query().orderBy("age",20);
   
   
 _That's all that you need to know about the database._
+
 
 
