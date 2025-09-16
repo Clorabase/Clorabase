@@ -29,5 +29,6 @@
   - [Initializing](pages/inapp#initializing)
   - [Sending push](pages/inapp#sending-in-app-message)
 
-- Github Web UI
+- [Github Web UI](pages/github)
+
 
