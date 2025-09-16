@@ -32,7 +32,8 @@ Once it is initialised, it will start checking for any pending messages from the
 
 To send an In-app message, In the console, go to **In-app messaging** option and fill in the blanks of the message. Click the **send** button to send the notification.  
   
-![In-app](pictures/in-app.jpg)  
+![In-app](../pictures/in-app.jpg)  
   
 _That's all that you need to know about in-app messaging_
+
 
