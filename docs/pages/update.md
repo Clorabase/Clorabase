@@ -28,12 +28,12 @@ clorabase.initInAppUpdate(this);
 
 For this to work, you have to first add the app to Clorabase in-app updates. You can do this easily through the console by clicking the floating button. See the picture below:  
   
-![add-app-update](/docs/pictures/add-app-update.jpg)  
+![add-app-update](../pictures/add-app-update.jpg)  
 
 ### Incrementing app version
 
 When you have published your new update, increment its version from the console. To increment the version, just add the same app again with the new version code and name  
-![update-info.jpg](/docs/pictures/update-info.jpg)  
+![update-info.jpg](../pictures/update-info.jpg)  
   
 You can also upload changelogs.md into your project updates directory using GitHub web ui. For example, if your project is `foobar` , upload the changelogs.md in `foobar/updates/com.foo.bar/`  
   
@@ -41,3 +41,4 @@ You can also upload changelogs.md into your project updates directory using GitH
 ###   
 
 _That's all you need to know about the in-app update_
+
