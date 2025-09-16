@@ -29,6 +29,11 @@
   - [Initializing](pages/inapp#initializing)
   - [Sending push](pages/inapp#sending-in-app-message)
 
-- [Github Web UI](pages/github)
+- Github Web UI
+
+  - [Introduction](pages/github#uploading-a-file-into-storage)
+  - [Initializing](pages/github#send-in-app-message)
+  - [Sending push](pages/github#create-a-versioned-app)
+
 
 
