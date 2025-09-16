@@ -71,6 +71,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.edit
 import androidx.core.net.toUri
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
@@ -97,7 +98,6 @@ import org.json.JSONObject
 import java.io.IOException
 import java.nio.file.FileAlreadyExistsException
 import java.util.Date
-import kotlin.random.Random
 
 
 val showDialog = mutableStateOf(false)
@@ -126,6 +126,11 @@ class MainActivity : ComponentActivity() {
 
 
                         model.fetchProjects({
+                            if (it.contains("Bad credentials")){
+                                config.edit { clear() };
+                                recreate();
+                            }
+
                             AlertDialog.Builder(this)
                                 .setTitle("Error")
                                 .setMessage(it)

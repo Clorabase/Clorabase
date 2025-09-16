@@ -46,7 +46,7 @@ open class MainViewModel(private val config: SharedPreferences) : ViewModel() {
                 withContext(Dispatchers.Main) {
                     onSuccess()
                 }
-            } catch (e : IOException) {
+            } catch (e : Exception) {
                 withContext(Dispatchers.Main){onError("Failed to load projects: ${e.message}")}
             }
         }

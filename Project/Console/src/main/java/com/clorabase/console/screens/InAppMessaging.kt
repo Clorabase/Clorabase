@@ -71,14 +71,12 @@ fun InAppMessagingScreen() {
 
     val isSendButtonEnabled = title.isNotBlank() && message.isNotBlank()
     val coroutineScope = rememberCoroutineScope()
-    val imagePickerLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.GetContent()
-    ) { uri: Uri? ->
+    val imagePickerLauncher = rememberLauncherForActivityResult(contract = ActivityResultContracts.GetContent()) { uri: Uri? ->
         if (uri != null) {
             coroutineScope.launch(Dispatchers.IO) {
                 try {
                     context.contentResolver.openInputStream(uri)?.use { inputStream ->
-                        val bytes = compressImage(inputStream,50)
+                        val bytes = compressImage(inputStream, 50)
                         imageBase64 = Base64.encodeToString(bytes, Base64.DEFAULT)
                         launch(Dispatchers.Main) {
                             Toast.makeText(context, "Image chosen", Toast.LENGTH_SHORT).show()
@@ -126,8 +124,8 @@ fun InAppMessagingScreen() {
                 if (e.message?.contains("Invalid request.") == true) {
                     try {
                         GithubUtils.update(jsonObject.toString().toByteArray(), path)
-                        withContext(Dispatchers.Main){
-                            Toast.makeText(context,"Message sent", Toast.LENGTH_LONG).show();
+                        withContext(Dispatchers.Main) {
+                            Toast.makeText(context, "Message sent", Toast.LENGTH_LONG).show();
                         }
                     } catch (deleteException: IOException) {
                         launch(Dispatchers.Main) {
@@ -158,10 +156,15 @@ fun InAppMessagingScreen() {
         Image(
             painter = painterResource(id = R.drawable.messaging),
             contentDescription = "Messaging",
-            modifier = Modifier.fillMaxWidth().height(180.dp)
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(180.dp)
         )
 
-        Column(Modifier.fillMaxWidth().fillMaxHeight().padding(16.dp)) {
+        Column(Modifier
+            .fillMaxWidth()
+            .fillMaxHeight()
+            .padding(16.dp)) {
             Text(
                 text = "Insert a message into the message queue of the project. The message will be deleted once it is seen by the client",
                 fontSize = 16.sp,
@@ -248,7 +251,7 @@ fun InAppMessagingScreen() {
                 } else {
                     Text("Send Message")
                     Spacer(Modifier.width(10.dp))
-                    Icon(Icons.Default.Send,"Send");
+                    Icon(Icons.Default.Send, "Send");
                 }
             }
         }
