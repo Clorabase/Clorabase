@@ -1,4 +1,4 @@
-<p align="center"><img alt="clorabase" height="350" width="350" src="/clorabase.png"></p>
+<p align="center"><img alt="clorabase" height="350" width="350" src="/favicon.png"></p>
 <p align="center">
   <img src="https://img.shields.io/github/license/ErrorxCode/Clorabase?style=for-the-badge">
   <img src="https://img.shields.io/github/stars/ErrorxCode/Clorabase?style=for-the-badge">
