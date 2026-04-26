@@ -79,13 +79,13 @@ In module **build.gradle** inside **dependencies** block:
 -   For Android SDK:
 
 ```gradle
-implementation 'com.github.Clorabase.Clorabase:SDK:0.5'
+implementation 'com.github.Clorabase.Clorabase:Clorabase4A:0.6'
 ```
 
 -   For Java SDK:
 
 ```gradle
-implementation 'com.github.Clorabase.Clorabase:Clorabase4j:0.5'
+implementation 'com.github.Clorabase.Clorabase:Clorabase4j:0.6'
 ```
 
 
@@ -97,7 +97,7 @@ Initialize the `Clorabase` singleton instance as early as possible in your app (
 ```java
 try {
     // Replace with your GitHub credentials and project name
-    Clorabase clorabase = Clorabase.getInstance("your_github_username", "your_github_token", "your_project");
+    Clorabase clorabase = Clorabase.getInstance("username", "token", "project");
 } catch (Exception e) {
     e.printStackTrace();
 }
@@ -106,8 +106,6 @@ try {
 ### 2️⃣ Basic Operations
 
 **📂 Database (Clorastore)**
-
-Easily navigate collections and write encrypted JSON data.
 
 ```java
 // 1. Get the root database reference
@@ -125,8 +123,6 @@ db.collection("users").document("user1")
 ```
 
 **📦 Storage**
-
-Access the storage bucket to upload and manage your files or large binary blobs.
 
 ```java
 // 1. Get the storage reference
