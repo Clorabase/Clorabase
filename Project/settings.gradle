@@ -10,6 +10,13 @@ pluginManagement {
         mavenCentral()
         gradlePluginPortal()
     }
+    resolutionStrategy {
+        eachPlugin {
+            if (requested.id.id == "de.mannodermaus.android-junit5") {
+                useModule("de.mannodermaus.gradle.plugins:android-junit5:${requested.version}")
+            }
+        }
+    }
 }
 
 
@@ -18,6 +25,7 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
+        maven { url "https://repo.jenkins-ci.org/public/" }
         maven {
             url 'https://jitpack.io'
         }
@@ -25,6 +33,7 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "Clorabase"
-include ':SDK'
+include ':Clorabase4A'
 include ':Clorabase4J'
 include ':Console'
+include ':Sample'
