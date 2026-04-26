@@ -36,4 +36,3 @@ rootProject.name = "Clorabase"
 include ':Clorabase4A'
 include ':Clorabase4J'
 include ':Console'
-include ':Sample'
