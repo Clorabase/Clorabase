@@ -1,117 +1,220 @@
-<p align="center"><img alt="clorabase" height="300" src="/Banner.png"></p>
+<h1 align="center">
+  <img src="/clorabase-banner.png" alt="Clorabase" width="800">
+</h1>
+
+<h4 align="center">Turn your GitHub repo into a No-SQL database.</h4>
+
 <p align="center">
-  <img src="https://img.shields.io/github/license/ErrorxCode/Clorabase?style=for-the-badge">
-  <img src="https://img.shields.io/github/stars/ErrorxCode/Clorabase?style=for-the-badge">
-  <img src="https://img.shields.io/github/issues/ErrorxCode/Clorabase?color=red&style=for-the-badge">
-  <img src="https://img.shields.io/github/forks/ErrorxCode/Clorabase?color=teal&style=for-the-badge">
+  <img src="https://img.shields.io/badge/Version-0.6-green?style=for-the-badge">
+  <img src="https://img.shields.io/github/stars/Clorabase/Clorabase?style=for-the-badge">
+  <img src="https://img.shields.io/github/issues/Clorabase/Clorabase?color=red&style=for-the-badge">
+  <img src="https://img.shields.io/github/forks/Clorabase/Clorabase?color=teal&style=for-the-badge">
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Author-Rahil--Khan-cyan?style=flat-square">
-  <img src="https://img.shields.io/badge/Open%20Source-Yes-cyan?style=flat-square">
-  <img src="https://img.shields.io/badge/Written%20In-Java-cyan?style=flat-square">
-  <img src="https://jitpack.io/v/Clorabase/Clorabase.svg">
+  <img src="https://img.shields.io/badge/Author-ErrorxCode-cyan?style=flat-square">
+  <img src="https://img.shields.io/badge/Open%20Source-Yes-green?style=flat-square">
+  <img src="https://img.shields.io/badge/Made%20In-Java-orange?style=flat-square">
 </p>
 
 
-## Clorabase
-> *Turn your github repo into a No-SQL database*
+<p align="center">
+  <img src="https://jitpack.io/v/Clorabase/Clorabase/month.svg">
+</p>
 
-Clorabase is a free backend alternative (BaaS) for Android and java apps that uses GitHub API & Github repo to facilitate NoSQL database & NTFS like storage system. Clorabase is mostly made for small apps which has small backend/server/database requirements. If your app scales large or you need more database storage or bandwidth, Clorabase may not serve you. You should consider using [Firebase](https://firebase.google.com). Clorabase AIMS provides a money-free production-ready backend for building Android apps as a hobby or start-up. It is for those who don't earn money from their apps and build apps just for learning or non-profit use.
+---
 
-<a href="https://github.com/Clorabase/Clorabase/releases/download/0.5/Console-stable-v0.5.apk"> <img alt="Download console" height=40 src="/button.png"></a>
+**Clorabase** is a lightweight, serverless **Backend-as-a-Service (BaaS)** designed for Android and Java applications. It leverages **GitHub** as both a storage and database provider, enabling developers to host application data, manage files, and handle in-app communications without traditional cloud hosting or complex server setups.
 
-## Features
-- No account needed
-- Uses GitHub usage & quota
-- Absolutely Free, No paid plans
-- Serverless NO-SQL database
-- In-app messaging
-- In-app updates
-- Cloud storage for apps
+It is ideal for **small apps, hobby projects, and non-commercial use cases** where cost efficiency and simplicity matter most. For larger-scale apps requiring advanced querying, authentication, or analytics, consider [Firebase](https://firebase.google.com).
 
 
-## Implementation
-#### To add SDK
-In your project **build.gradle**
-```
+## 🚀 Features
+
+- **Clorastore Database**  
+  A NoSQL-like database storing data as **encrypted JSON files** in a GitHub repository.  
+  - Supports nested collections  
+  - Document-based CRUD operations  
+  - Basic querying
+
+- **Integrated Storage**  
+  Two modes of file management:  
+  - Standard uploads (< 50 MB) directly to the repo  
+  - Large file uploads via **GitHub Release assets**
+
+- **In-App Messaging (Android)**  
+  Remote messaging service for showing custom dialogs (Coupon, Promo, Simple) by updating a JSON file in the repo.
+
+- **In-App Updates (Android)**  
+  Version management utility for apps outside the Play Store.  
+  - Flexible or immediate update prompts  
+  - Controlled via `version.json`
+
+- **Security**  
+  All records are encrypted with **AES** before being pushed to GitHub.
+
+- **Zero Cost**  
+  Fully free solution powered by GitHub’s infrastructure — ideal for small to medium projects.
+
+- **Other Highlights**  
+  - No account needed  
+  - Uses GitHub usage & quota  
+  - Absolutely free, no paid plans  
+  - Cloud storage for apps  
+
+## ⚙️ Implementation
+
+In your project **build.gradle**:
+
+```gradle
 allprojects {
-		repositories {
-			...
-			maven { url 'https://jitpack.io' }
-		}
-	}
+    repositories {
+        ...
+        maven { url 'https://jitpack.io' }
+    }
+}
 ```
 In module **build.gradle** inside **dependencies** block:
-- For Android SDK:
-```
+
+-   For Android SDK:
+
+```gradle
 implementation 'com.github.Clorabase.Clorabase:SDK:0.5'
 ```
-- For Java SDK:
-```
+
+-   For Java SDK:
+
+```gradle
 implementation 'com.github.Clorabase.Clorabase:Clorabase4j:0.5'
 ```
 
 
+## 🚀 Quick Start / Usage
 
-#### To generate a GitHub OAuth token
-1. Goto [Create token](https://github.com/settings/tokens/new)
-2. Select the 'Classic' token type and set the expiry to 'No expiration'
-3. Check the following in the scope sections:
-   - delete_repo
-   - repo
-4. Click generate.
+### 1️⃣ Initialization
+Initialize the `Clorabase` singleton instance as early as possible in your app (e.g., in your `Application` class or the `onCreate` of your main Activity).
 
-Now you can use this token to access the console and SDK.
+```java
+try {
+    // Replace with your GitHub credentials and project name
+    Clorabase clorabase = Clorabase.getInstance("your_github_username", "your_github_token", "your_project");
+} catch (Exception e) {
+    e.printStackTrace();
+}
+```
 
-⚠️**NOTE:** Never publish your code containing this token on GitHub, if you do, then the token will automatically be deleted and your code will break
+### 2️⃣ Basic Operations
+
+**📂 Database (Clorastore)**
+
+Easily navigate collections and write encrypted JSON data.
+
+```java
+// 1. Get the root database reference
+ClorastoreCollection db = clorabase.getDatabase();
+
+// 2. Prepare your data
+Map<String, Object> data = new HashMap<>();
+data.put("name", "Rahil");
+data.put("role", "Admin");
+
+// 3. Write data to a specific document asynchronously
+db.collection("users").document("user1")
+  .setData(data)
+  .addOnSuccessListener(v -> Log.d("DB", "Data saved successfully!"));
+```
+
+**📦 Storage**
+
+Access the storage bucket to upload and manage your files or large binary blobs.
+
+```java
+// 1. Get the storage reference
+ClorabaseStorage storage = clorabase.getStorage();
+
+// 2. Create or navigate to a specific directory
+ClorabaseStorage imagesDir = storage.directory("images");
+
+// 3. Upload a file stream
+imagesDir.uploadFile(inputStream, "avatar.png", new ProgressListener() {
+    @Override
+    public void onProgress(long bytesRead, long totalBytes) {
+        // Track progress here
+    }
+    @Override
+    public void onComplete() {
+        Log.d("Storage", "Upload complete!");
+    }
+    @Override
+    public void onError(Exception e) {
+        e.printStackTrace();
+    }
+});
+```
+
+#### For detailed user guide, visit our [documentation]()
 
 
-### Documentation
-- [User guide](https://clorabase.github.io)
+## 🔑 Generating GitHub Token
 
-## Clorabase vs Firebase
-The rule of thumb is, if you’re building a small project or dedicated mobile application, and you don’t mind the high bandwidth or database storage, Clorabase is a great place to start. If you’re looking for a more general-purpose data solution, value performance at scale and advanced querying, Firebase is going to serve your needs best.
+Clorabase requires a **GitHub Personal Access Token (PAT)**:
 
-See the table below to compare Clorabase and Firebase with their features.
+1.  Navigate to **Settings** > **Developer settings** > **Personal access tokens** > **Tokens (classic)**.
+2.  Click **Generate new token**.
+3.  Select scopes:
+    -   `repo` (full control of private repositories)
+    -   `workflow`
+4.  Copy and store the token securely — it’s required for SDK initialization.
+
+⚠️ **Note:** Never publish your token in public repos. If exposed, GitHub will revoke it automatically.
+
+
+----
+
+## 📊 Clorabase vs Firebase
+
 
 | Feature | Clorabase | Firebase |
-| :--- | :--- | :--- |
-| **Primary Use Case** | Small, non-commercial Android apps, hobby projects, proof-of-concepts, learning. | Professional, scalable, and cross-platform applications (mobile & web). |
-| **Cost** | **Absolutely free, no paid plans or usage barriers.** | **Freemium model:** Generous free tier, but a "pay-as-you-go" plan for high usage. |
-| **Backend Storage** | Your data is stored in your own **GitHub repository** | Data is stored on **Google's cloud infrastructure** (Firestore, Realtime Database, Cloud Storage). |
-| **Scalability** | **Limited.** Best for small-scale applications. It may not perform well with large amounts of traffic or data. | **Highly Scalable.** Built to handle millions of concurrent connections and terabytes of data. |
-| **Core Services** | Databases (NoSQL), Cloud Storage, Push Messaging, In-App Messaging, In-App Updates. | Databases (Firestore, Realtime DB), Authentication, Cloud Functions, Hosting, Machine Learning, Analytics, Push Notifications, and more. |
+| --- | --- | --- |
+| **Primary Use Case** | Small, non-commercial Android apps, hobby projects, proof-of-concepts | Professional, scalable, cross-platform apps |
+| **Cost** | 100% Free (GitHub limits) | Tiered / Pay-as-you-go |
+| **Data Ownership** | You own the GitHub repo | Stored on Google Servers |
+| **Setup Complexity** | Very Low | Moderate to High |
+| **Database Type** | JSON-based (Encrypted) | NoSQL (Firestore / Realtime) |
+| **Large File Support** | GitHub Release Assets | Firebase Storage |
+| **In-App Messages** | GitHub JSON configuration | Firebase In-App Messaging |
+| **Scalability** | Limited, best for small-scale apps | Highly scalable, millions of users |
+| **Core Services** | Database, Storage, Messaging, Updates | Database, Auth, Hosting, ML, Analytics, Functions |
 
 
-#### Choose Clorabase when...
-   -   Your primary concern is **cost**, and you need a completely free solution.
-        
-   -   You are building a personal or hobby project that won't have a large user base.
-        
--   The app is an Android or Java only project.
-        
-  -   You have a simple data model and don't require advanced queries, authentication, or other integrated services.
-        
--    You are comfortable with a more hands-on, DIY approach and are willing to handle things like user authentication yourself.
+### ✅ Choose Clorabase when...
 
-
-
-## Contributing to Clorabase
-First off, thank you for considering contributing to Clorabase! It's because of people like you that this project can be what it is today.
-
-We welcome all types of contributions, from reporting bugs and suggesting new features to writing code and improving documentation.
-
- Refer to [contribution.md](/contribution.md) to start contributing
-
-*-> For personal assitance, you can contact the repo owner at x0.khanrahil@gmail.com or [x1.rahil](https://instagram.com/x1.rahil) on instagram*
+-   Your primary concern is **cost** (completely free).
+-   You’re building a **personal or hobby project** with a small user base.
+-   The app is **Android/Java only**.
+-   You have a **simple data model** without advanced queries or authentication needs.
+-   You prefer a **DIY approach** and don’t mind handling authentication yourself.
 
 
 
-## Support
-This project comprises of lot's of energy, brainstorming, coding, testing and time. If this project has helped you in any way, please consider giving it a ⭐ to show your support and help it grow! Also, *watch* the repo to notify about updates.
+
+## 🤝 Contribution & Support
+
+Clorabase is an open-source project by **Rahil Khan**. Contributions are welcome!
+
+-   **Report Bugs** → Use the GitHub Issues tab
+-   **Support** → Refer to upcoming Wiki pages or community discussions
+-   **Contribution Guide** → See [contribution.md](https://copilot.microsoft.com/contribution.md)
+
+For personal assistance, contact:  
+📧 x0.khanrahil@gmail.com  
+📱 [Instagram: @x1.rahil](https://instagram.com/x1.rahil)
+
+
+## ⭐ Support the Project
+
+This project took a lot of energy, brainstorming, coding, and testing.  
+If Clorabase helped you, please **give it a star ⭐** and **watch** the repo to stay updated!
+
 
 [![Readme Quotes](https://quotes-github-readme.vercel.app/api?type=horizontal&theme=dracula)](https://github.com/piyushsuthar/github-readme-quotes)
-
-
-![water](https://raw.githubusercontent.com/mayhemantt/mayhemantt/Update/svg/Bottom.svg)
