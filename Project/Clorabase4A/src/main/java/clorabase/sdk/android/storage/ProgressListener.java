@@ -1,10 +1,10 @@
-package clorabase.sdk.java.storage;
+package clorabase.sdk.android.storage;
 
 /**
  * ProgressListener interface for monitoring the progress of file operations.
  */
 public interface ProgressListener {
     void onProgress(long bytesRead, long totalBytes);
-    void onComplete(String result);
+    void onComplete();
     void onError(Exception e);
 }

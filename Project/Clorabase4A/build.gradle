@@ -1,0 +1,59 @@
+plugins {
+    id 'com.android.library'
+    id 'tech.apter.junit5.jupiter.robolectric-extension-gradle-plugin'
+}
+
+
+android {
+    compileSdk 35
+
+    publishing {
+        singleVariant('release') {
+            withSourcesJar()
+            withJavadocJar()
+        }
+    }
+
+    defaultConfig {
+        minSdkVersion 29
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_21
+        targetCompatibility JavaVersion.VERSION_21
+    }
+
+    packagingOptions {
+        resources.excludes.add("META-INF/*")
+        resources.excludes.add("mozilla/*")
+    }
+
+    testOptions {
+        unitTests.all {
+            useJUnitPlatform()
+        }
+    }
+
+    namespace 'clorabase.sdk.android'
+}
+
+
+
+dependencies {
+    implementation libs.github.api
+    implementation project(':Clorabase4J')
+    api libs.play.services.tasks
+    implementation libs.annotations
+    implementation libs.appcompat
+    // JUnit 6 (Jupiter)
+    testImplementation libs.junit5
+    testImplementation libs.junit.launcher
+    testImplementation libs.robolectric
+    testImplementation libs.androidx.test.core
+}

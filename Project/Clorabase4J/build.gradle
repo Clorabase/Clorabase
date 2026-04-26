@@ -1,10 +1,7 @@
 plugins {
     id 'java-library'
-    id 'maven-publish'
 }
 
-group = 'com.github.clorabase'
-version = '0.5'
 
 java {
     sourceCompatibility JavaVersion.VERSION_21
@@ -16,18 +13,13 @@ test {
 }
 
 
-publishing {
-    publications {
-        mavenJava(MavenPublication) {
-            from components.java
-        }
-    }
-}
-
 
 dependencies {
     implementation libs.github.api
-    implementation libs.json
+    api(libs.json.android)
     implementation libs.annotations
-    testImplementation libs.junit.jupiter
+    implementation(libs.okhttp)
+    testImplementation libs.junit5
+    testImplementation libs.junit.launcher
+
 }

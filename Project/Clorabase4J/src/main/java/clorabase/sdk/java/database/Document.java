@@ -1,11 +1,10 @@
 package clorabase.sdk.java.database;
 
-import static org.json.JSONObject.NULL;
 
+import android.org.json.JSONArray;
+import android.org.json.JSONObject;
 
 import org.jetbrains.annotations.NotNull;
-import org.json.JSONArray;
-import org.json.JSONObject;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -24,18 +23,30 @@ import clorabase.sdk.java.Reason;
  * To know more about documents, see {@link <a href="https://www.mongodb.com/docs/compass/current/documents/">...</a>}
  */
 public class Document implements Comparable<Document> {
-    protected final String path;
-    protected final String finalPath;
+    protected Collection parent;
+    protected String absolutePath;
     protected long lastUpdatedTime = 0;
     protected Map<String, Object> data;
     protected static final int DOCUMENT_MAX_SIZE = 2*1024*1024;
-    public final String name;
+    public String name;
     protected String orderingField = "timestamp";
 
-    protected Document(String base,String path){
-        this.name = path.substring(path.lastIndexOf("/") + 1); // get the name from the path
-        this.path = path;
-        this.finalPath = base + this.path;
+    public Document(Collection collection, String name){
+        this.parent = collection;
+        this.absolutePath = collection.basePath + collection.path + "/" + name + ".doc";
+        this.name = name;
+    }
+
+    private Document(){
+
+    }
+
+    public static Document fromPath(Collection collection,String path){
+        var doc = new Document();
+        doc.parent = collection;
+        doc.absolutePath = collection.basePath + path;
+        doc.name = path.substring(path.lastIndexOf("/") + 1, path.lastIndexOf(".doc"));
+        return doc;
     }
 
 
@@ -54,10 +65,12 @@ public class Document implements Comparable<Document> {
             return data;
     }
 
+    /**
+     * Gets the path of the document.
+     * @return The path of the document with .doc extension
+     */
     public String getPath() {
-        if (path.startsWith("/"))
-            return path.substring(1);
-        return path;
+        return parent.path + "/" + name + ".doc";
     }
 
     public String getName() {
@@ -77,7 +90,7 @@ public class Document implements Comparable<Document> {
             }
 
             var commit = GithubUtils.getLatestCommit("/");
-            var enc = GithubUtils.getImmediateRaw(finalPath, commit);
+            var enc = GithubUtils.getImmediateRaw(absolutePath, commit);
             var decStr = SecurityProvider.decrypt(enc);
             assert decStr != null;
             data = toMap(new JSONObject(decStr));
@@ -105,11 +118,11 @@ public class Document implements Comparable<Document> {
             if (bytes.length > DOCUMENT_MAX_SIZE)
                 throw new ClorastoreException("Document size cannot be more then 2MB", Reason.DOCUMENT_SIZE_EXCEEDED);
 
-            System.out.println("Creating document at path: " + finalPath);
-            GithubUtils.create(bytes, finalPath);
+            System.out.println("Creating document at path: " + absolutePath);
+            GithubUtils.create(bytes, absolutePath);
             lastUpdatedTime = System.currentTimeMillis();
         } catch (Exception e) {
-            throw new ClorastoreException("Unknown error : " + e.getMessage(),Reason.UNKNOWN);
+            ClorastoreException.handle(e, "Document with name '" + name + "' does not exists in this collection", "Failed to update document with name '" + name + "'.");
         }
     }
 
@@ -119,18 +132,10 @@ public class Document implements Comparable<Document> {
             if (bytes.length > DOCUMENT_MAX_SIZE)
                 throw new ClorastoreException("Document size cannot be more then 2MB", Reason.DOCUMENT_SIZE_EXCEEDED);
 
-            GithubUtils.update(bytes, finalPath);
+            GithubUtils.update(bytes, absolutePath);
             lastUpdatedTime = System.currentTimeMillis();
         } catch (Exception e) {
-            if (e instanceof IOException) {
-                if (e instanceof FileNotFoundException) {
-                    throw new ClorastoreException("Document with name '" + name + "' does not exists in this collection",Reason.NOT_EXISTS);
-                } else {
-                    throw new ClorastoreException("Failed to update document with name '" + name + "'.", Reason.UNKNOWN);
-                }
-            } else {
-                throw new ClorastoreException("Unknown error", Reason.UNKNOWN);
-            }
+            ClorastoreException.handle(e, "Document with name '" + name + "' does not exists in this collection", "Failed to update document with name '" + name + "'.");
         }
     }
 
@@ -234,14 +239,10 @@ public class Document implements Comparable<Document> {
      */
     public void delete() throws ClorastoreException {
         try {
-            GithubUtils.delete(finalPath);
+            GithubUtils.delete(absolutePath);
             data = null; // Clear the cached data
         } catch (IOException e) {
-            if (e instanceof FileNotFoundException) {
-                throw new ClorastoreException("Document with name '" + name + "' does not exist.", Reason.NOT_EXISTS);
-            } else {
-                throw new ClorastoreException("Failed to delete document with name '" + name + "'.", Reason.UNKNOWN);
-            }
+            ClorastoreException.handle(e, "Document with name '" + name + "' does not exist.", "Failed to delete document with name '" + name + "'.");
         }
     }
 
@@ -275,7 +276,7 @@ public class Document implements Comparable<Document> {
         return false;
     }
 
-    public Map<String, Object> toMap(JSONObject object) {
+    protected Map<String, Object> toMap(JSONObject object) {
         Map<String, Object> results = new HashMap<String, Object>();
 
         var list = new ArrayList<Map.Entry<String,Object>>();
@@ -286,7 +287,7 @@ public class Document implements Comparable<Document> {
 
         for (Map.Entry<String, Object> entry : list) {
             Object value;
-            if (entry.getValue() == null || NULL.equals(entry.getValue())) {
+            if (entry.getValue() == null || JSONObject.NULL.equals(entry.getValue())) {
                 value = null;
             } else if (entry.getValue() instanceof JSONObject) {
                 value = toMap(((JSONObject) entry.getValue()));
@@ -300,11 +301,11 @@ public class Document implements Comparable<Document> {
         return results;
     }
 
-    public List<Object> toList(JSONArray myArrayList) {
+    protected List<Object> toList(JSONArray myArrayList) {
         List<Object> results = new ArrayList<Object>(myArrayList.length());
         for (int i = 0; i < myArrayList.length(); i++) {
             var element = myArrayList.get(i);
-            if (element == null || NULL.equals(element)) {
+            if (element == null || JSONObject.NULL.equals(element)) {
                 results.add(null);
             } else if (element instanceof JSONArray) {
                 var list = toList(((JSONArray) element));
@@ -322,7 +323,7 @@ public class Document implements Comparable<Document> {
     @Override
     public String toString() {
         return "Document{" +
-                "path='" + path + '\'' +
+                "path='" + absolutePath + '\'' +
                 ", data=" + data +
                 ", name='" + name + '\'' +
                 '}';
@@ -337,5 +338,9 @@ public class Document implements Comparable<Document> {
         assert v2 != null;
 
         return (int) (v1.doubleValue() - v2.doubleValue());
+    }
+
+    public Collection getCollection() {
+        return parent;
     }
 }

@@ -1,9 +1,15 @@
 package clorabase.sdk.java.utils;
 
-import org.json.JSONException;
-import org.json.JSONObject;
+import android.org.json.JSONException;
+import android.org.json.JSONObject;
+
+import org.jetbrains.annotations.NotNull;
 import org.kohsuke.github.GHRepository;
 import org.kohsuke.github.GitHub;
+import org.kohsuke.github.GitHubBuilder;
+import org.kohsuke.github.HttpException;
+import org.kohsuke.github.extras.okhttp3.OkHttpGitHubConnector;
+import org.kohsuke.github.internal.DefaultGitHubConnector;
 
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
@@ -13,12 +19,17 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.nio.file.Files;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Scanner;
+import java.util.function.Consumer;
 
 import clorabase.sdk.java.storage.ProgressListener;
+import okhttp3.OkHttpClient;
 
 
 /**
@@ -33,14 +44,18 @@ public class GithubUtils {
     /**
      * Initializes the GitHub connection with the provided token and username. This also checks if the repository exists or not
      * @param token GitHub OAuth token
-     * @param user GitHub username
      * @throws Exception if repository does not exist or if there is an error connecting to GitHub
      */
-    public static void init(String token,String user) throws Exception {
+    public static void init(String token) throws Exception {
+        if (repo != null)
+            return;
+
         try {
             GithubUtils.token = token;
+            var connector = new OkHttpGitHubConnector(new OkHttpClient.Builder().build());
+            gitHub = new GitHubBuilder().withConnector(connector).withOAuthToken(token).build();
+            var user = gitHub.getMyself().getLogin();
             Constants.init(user);
-            gitHub = GitHub.connectUsingOAuth(token);
             username = user;
             repo = gitHub.getRepository(username + "/" + "Clorabase-projects");
         } catch (IOException e){
@@ -72,6 +87,66 @@ public class GithubUtils {
                 .commit()
                 .getCommit()
                 .getSha();
+    }
+
+    /**
+     * Uploads or creates a file in the repository using the standard REST API with body streaming.
+     * Since GitHub's REST API requires JSON with Base64 content, we stream the JSON structure
+     * and the Base64-encoded file data to avoid loading the entire file into memory.
+     *
+     * @param stream The InputStream of the file to upload
+     * @param path The path in the repository
+     */
+    public static void uploadFile(@NotNull InputStream stream,@NotNull String path,@NotNull ProgressListener listener) {
+        long uploaded = 0;
+        try {
+            long totalSize = stream.available();
+            URL url = new URL("https://api.github.com/repos/" + username + "/Clorabase-projects/contents/" + path);
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("PUT");
+            conn.setRequestProperty("Authorization", "Bearer " + token);
+            conn.setRequestProperty("Accept", "application/vnd.github+json");
+            conn.setDoOutput(true);
+            conn.setChunkedStreamingMode(0);
+
+            OutputStream os = conn.getOutputStream();
+            // Write start of JSON body
+            os.write("{\"message\":\"Uploaded via SDK\",\"content\":\"".getBytes());
+
+            // Stream and Base64 encode the file content directly into the request body
+            byte[] buffer = new byte[3 * 1024]; // Multiple of 3 for valid Base64 padding
+            int bytesRead;
+            Base64.Encoder encoder = Base64.getEncoder();
+            while ((bytesRead = stream.read(buffer)) != -1) {
+                byte[] encodedChunk;
+                if (bytesRead == buffer.length) {
+                    encodedChunk = encoder.encode(buffer);
+                } else {
+                    byte[] smallerBuffer = new byte[bytesRead];
+                    System.arraycopy(buffer, 0, smallerBuffer, 0, bytesRead);
+                    encodedChunk = encoder.encode(smallerBuffer);
+                }
+                os.write(encodedChunk);
+                uploaded += bytesRead;
+                listener.onProgress(uploaded, totalSize);
+            }
+
+            // Close JSON body
+            os.write("\"}".getBytes());
+            os.flush();
+
+            int responseCode = conn.getResponseCode();
+            InputStream is = (responseCode >= 200 && responseCode < 300) ? conn.getInputStream() : conn.getErrorStream();
+            try (Scanner scanner = new Scanner(is).useDelimiter("\\A")) {
+                String response = scanner.hasNext() ? scanner.next() : "";
+                if (responseCode >= 300) throw new IOException("Upload failed: " + response);
+
+                var result =  new JSONObject(response).getJSONObject("content").getString("sha");
+                listener.onComplete(result);
+            }
+        } catch (IOException e){
+            listener.onError(e);
+        }
     }
 
     /**
@@ -139,8 +214,8 @@ public class GithubUtils {
      */
     public static String getLatestCommit(String path) throws IllegalArgumentException, IOException {
         var res = getJsonResponse(Constants.COMMIT_INFO + path);
-        if (res.has("oid")) {
-            return res.getString("oid");
+        if (res.containsKey("oid")) {
+            return res.get("oid").toString();
         } else {
             throw new IllegalArgumentException("Path does not exist or is invalid: " + path);
         }
@@ -170,7 +245,7 @@ public class GithubUtils {
      * @throws IOException if there is an error fetching the response
      * @throws JSONException if the response is not valid JSON
      */
-    public static JSONObject getJsonResponse(String url) throws IOException, JSONException {
+    public static Map<String,Object> getJsonResponse(String url) throws IOException, JSONException {
         HttpURLConnection connection = (HttpURLConnection) new URL(url).openConnection();
         connection.setRequestProperty("Accept", "application/json");
         connection.connect();
@@ -181,7 +256,8 @@ public class GithubUtils {
             while ((line = reader.readLine()) != null) {
                 response.append(line);
             }
-            return new JSONObject(response.toString());
+            var result = new JSONObject(response.toString());
+            return result.toMap();
         }
     }
 
@@ -215,19 +291,24 @@ public class GithubUtils {
         conn.disconnect();
     }
 
-    public static JSONObject uploadAsset(InputStream stream, String name, String tag, ProgressListener listener) {
+    public static JSONObject uploadAsset(@NotNull InputStream stream,@NotNull String name,@NotNull String tag,@NotNull ProgressListener listener) {
         try {
-            var releaseID = repo.getReleaseByTagName(tag).getId();
+            var release = repo.getReleaseByTagName(tag);
+            if (release == null){
+                listener.onError(new FileNotFoundException("Release not found"));
+                return null;
+            }
+
             long size = stream.available();
-            URL url = new URL(String.format(Constants.UPLOAD_ASSETS,releaseID) + name);
+            URL url = new URL(String.format(Constants.UPLOAD_ASSETS,release.getId()) + name);
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
             conn.setDoOutput(true); // Enable writing to the connection
+            conn.setFixedLengthStreamingMode(size);
             conn.setRequestMethod("POST");
             conn.setRequestProperty("Accept", "application/vnd.github+json");
             conn.setRequestProperty("Authorization", "Bearer " + token);
             conn.setRequestProperty("X-GitHub-Api-Version", "2022-11-28");
             conn.setRequestProperty("Content-Type", "application/octet-stream");
-            conn.setRequestProperty("Content-Length", String.valueOf(size));
 
             OutputStream os = conn.getOutputStream();
             long totalByte = 0;
@@ -268,13 +349,20 @@ public class GithubUtils {
             conn.setReadTimeout(5000);
 
             var resCode = conn.getResponseCode();
-            return (conn.getResponseCode()/100) == 2;
+            return (resCode/100) == 2;
         } catch (IOException e) {
             if (e instanceof FileNotFoundException)
                 return false;
             else
                 throw e;
         }
+    }
+
+    public static void updateJSON(@NotNull String path,@NotNull Consumer<Map<String,Object>> updater) throws IOException {
+        var json = new JSONObject(new String(getRaw(path)));
+        var map = json.toMap();
+        updater.accept(map);
+        update(new JSONObject(map).toString().getBytes(),path);
     }
 
     /**
@@ -311,5 +399,25 @@ public class GithubUtils {
         } catch (JSONException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public static void createClorabaseRepo() {
+        try {
+            gitHub.createRepository("Clorabase-projects")
+                    .owner(username)
+                    .autoInit(true)
+                    .description("This repo is created by clorabase console and is totally of internal use.")
+                    .create();
+        } catch (IOException e) {
+            if (!e.getMessage().contains("already"))
+                throw new RuntimeException(e);
+        }
+    }
+
+    public static void createStorageRelease(@NotNull String project) throws IOException {
+        repo.createRelease(project)
+                .name(project + " Store room")
+                .body(new String(GithubUtils.fetchBytes("https://raw.githubusercontent.com/Clorabase/clorabase.github.io/refs/heads/main/docs/release.md")))
+                .create();
     }
 }

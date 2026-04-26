@@ -1,8 +1,9 @@
 package clorabase.sdk.java;
 
+import android.org.json.JSONException;
+import android.org.json.JSONObject;
+
 import org.jetbrains.annotations.NotNull;
-import org.json.JSONException;
-import org.json.JSONObject;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 
@@ -23,23 +24,23 @@ import clorabase.sdk.java.utils.GithubUtils;
  */
 public class Clorabase {
     private static Clorabase instance;
+    public final String DB_BASE_PATH;
     private final String project;
     private final Config config;
 
-    protected Clorabase(String token, String project, String username) throws Exception {
+    protected Clorabase(String token, String project) throws Exception {
         this.project = project;
-
+        this.DB_BASE_PATH = project + "/db/";
         try {
-            GithubUtils.init(token, username);
+            GithubUtils.init(token);
             SecurityProvider.init(token);
 
             byte[] bytes = GithubUtils.getRaw(project + "/" + "config.json");
             var json = new JSONObject(new String(bytes));
             this.config = new Config();
             this.config.project = json.getString("project");
-            this.config.username = username;
             this.config.version = json.getString("version");
-            this.config.isStorageConfigured = json.optBoolean("isStorageConfigured", false);
+            this.config.isStorageConfigured = json.optBoolean("blobConfigured", false);
         } catch (FileNotFoundException e) {
             throw new IllegalStateException("Project not configured or does not exist: " + project, e);
         } catch (JSONException e) {
@@ -61,7 +62,7 @@ public class Clorabase {
             if (username.isBlank() || token.isBlank() || project.isBlank()) {
                 throw new IllegalArgumentException("Username, token, and project must not be blank.");
             } else
-                instance = new Clorabase(token, project, username);
+                instance = new Clorabase(token, project);
         }
         return instance;
     }
@@ -79,7 +80,7 @@ public class Clorabase {
      * @return Collection representing the root of the database.
      */
     public Collection getDatabase() {
-        return new Collection(null, project + "/db","");
+        return new Collection(null,"",project + "/db");
     }
 
     /**
@@ -88,10 +89,7 @@ public class Clorabase {
      * @throws IllegalStateException if storage is not configured for the project.
      */
     public ClorabaseStorage getStorage() throws IllegalStateException {
-        if (config.isStorageConfigured)
-            return new ClorabaseStorage(project + "/storage", "",project);
-        else
-            throw new IllegalStateException("Storage is not configured for this project: " + project);
+        return new ClorabaseStorage(project + "/storage", "",project);
     }
 
     public Quota getAPIQuota() throws IOException {

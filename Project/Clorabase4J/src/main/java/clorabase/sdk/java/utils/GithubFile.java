@@ -36,6 +36,8 @@ public class GithubFile {
                 "name='" + name + '\'' +
                 ", path='" + path + '\'' +
                 ", sha='" + sha + '\'' +
+                ", isFile=" + isFile +
+                ", rawUrl='" + rawUrl + '\'' +
                 '}';
     }
 }

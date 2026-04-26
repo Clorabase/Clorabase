@@ -1,7 +1,8 @@
 package clorabase.sdk.java.storage;
 
+import android.org.json.JSONObject;
+
 import org.jetbrains.annotations.NotNull;
-import org.json.JSONObject;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -57,11 +58,25 @@ public class ClorabaseStorage {
         try {
             GithubUtils.create(contents, filePath);
         } catch (IOException e) {
-            var msg = e.getMessage();
-            if (msg != null && msg.contains("\"status\":\"422\"")) {
-                throw new StorageException("File already exists: " + filePath, Reason.File_ALREADY_EXISTS);
-            } else
-                throw new StorageException("Failed to add file to directory: " + e.getMessage(), e);
+            StorageException.handle(e, "File already exists: " + filePath, "Failed to add file to directory: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Uploads a file to this directory.The file must be less than 50 MB
+     * @param file The file to be uploaded
+     * @param fileName The name of the file to be uploaded
+     * @param listener A ProgressListener to track the upload progress
+     */
+    public void uploadFile(@NotNull InputStream file, @NotNull String fileName, @NotNull ProgressListener listener) {
+        var filepath = this.path + "/" + fileName;
+        try(var stream = file) {
+            if (stream.available() > 50 * 1024 * 1024)
+                throw new RuntimeException(new StorageException("File size exceeds 50 MB. Use blob upload", Reason.FILE_TOO_LARGE));
+            else
+                GithubUtils.uploadFile(stream,filepath,listener);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -91,13 +106,14 @@ public class ClorabaseStorage {
                 json.put("timestamp", System.currentTimeMillis());
                 json.put("id",asset.getInt("id"));
                 GithubUtils.create(json.toString().getBytes(), filePath);
-                listener.onComplete();
+                listener.onComplete(json.getString("url"));
             }
         } catch (IOException e) {
-            if (e.getMessage().contains("\"code\":\"already_exists\""))
-                listener.onError(new StorageException("File already exists: " + filePath, Reason.File_ALREADY_EXISTS));
-            else
-                listener.onError(new StorageException("Failed to upload file: " + e.getMessage(), e));
+            try {
+                StorageException.handle(e, "File already exists: " + filePath, "Failed to upload file: " + e.getMessage());
+            } catch (StorageException ex) {
+                listener.onError(ex);
+            }
         }
     }
 
@@ -117,6 +133,7 @@ public class ClorabaseStorage {
             var content = new String(GithubUtils.getRaw(filePath));
             var json = new JSONObject(content);
             String url = json.getString("url");
+
             HttpURLConnection connection = (HttpURLConnection) new URL(url).openConnection();
             connection.setRequestMethod("GET");
             connection.setRequestProperty("Accept", "application/octet-stream");
@@ -126,11 +143,8 @@ public class ClorabaseStorage {
             } else
                 return connection.getInputStream();
         } catch (IOException e) {
-            if (e instanceof FileNotFoundException) {
-                throw new StorageException("File not found: " + filePath, Reason.NOT_EXISTS);
-            } else {
-                throw new StorageException("Failed to retrieve download stream: " + e.getMessage(), e);
-            }
+            StorageException.handle(e, "File not found: " + filePath, "Failed to retrieve download stream: " + e.getMessage());
+            return null; // Unreachable
         }
     }
 
@@ -152,11 +166,8 @@ public class ClorabaseStorage {
             String url = json.getString("url");
             return new URL(url);
         } catch (IOException e) {
-            if (e instanceof FileNotFoundException) {
-                throw new StorageException("File not found: " + filePath, Reason.NOT_EXISTS);
-            } else {
-                throw new StorageException("Failed to retrieve download stream: " + e.getMessage(), e);
-            }
+            StorageException.handle(e, "File not found: " + filePath, "Failed to retrieve download stream: " + e.getMessage());
+            return null; // Unreachable
         }
     }
 
@@ -171,11 +182,7 @@ public class ClorabaseStorage {
         try {
             GithubUtils.delete(filePath);
         } catch (IOException e) {
-            if (e instanceof FileNotFoundException) {
-                throw new StorageException("File not found: " + filePath, Reason.NOT_EXISTS);
-            } else {
-                throw new StorageException("Failed to delete file: " + e.getMessage(), e);
-            }
+            StorageException.handle(e, "File not found: " + filePath, "Failed to delete file: " + e.getMessage());
         }
     }
 
@@ -194,11 +201,7 @@ public class ClorabaseStorage {
             GithubUtils.deleteAsset(id);
             GithubUtils.delete(path);
         } catch (IOException e) {
-            if (e instanceof FileNotFoundException) {
-                throw new StorageException("Blob file not found: " + name, Reason.NOT_EXISTS);
-            } else {
-                throw new StorageException("Failed to delete blob: " + e.getMessage(), e);
-            }
+            StorageException.handle(e, "Blob file not found: " + name, "Failed to delete blob: " + e.getMessage());
         }
     }
 
@@ -214,11 +217,8 @@ public class ClorabaseStorage {
         try {
             return GithubUtils.getRaw(filePath);
         } catch (IOException e) {
-            if (e instanceof FileNotFoundException) {
-                throw new StorageException("File not found: " + filePath, Reason.NOT_EXISTS);
-            } else {
-                throw new StorageException("Failed to retrieve file: " + e.getMessage(), e);
-            }
+            StorageException.handle(e, "File not found: " + filePath, "Failed to retrieve file: " + e.getMessage());
+            return null; // Unreachable
         }
     }
 
@@ -235,7 +235,8 @@ public class ClorabaseStorage {
                     .map(GithubFile::getName)
                     .collect(Collectors.toList());
         } catch (IOException e) {
-            throw new StorageException("Failed to list files in directory: " + e.getMessage(), e);
+            StorageException.handle(e, "Failed to list files in directory: " + e.getMessage());
+            return null; // Unreachable
         }
     }
 

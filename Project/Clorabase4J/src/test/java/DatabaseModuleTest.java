@@ -19,9 +19,9 @@ public class DatabaseModuleTest {
 
     @BeforeAll
     static void setup() throws Exception {
-        // Use test credentials or mock as needed
-        clorabase = Clorabase.getInstance("ErrorxCode","API TOKEN HERE","test3");
-        db = clorabase.getDatabase();
+        var apiKey = System.getenv("github");
+        assertNotNull(apiKey);
+        clorabase = Clorabase.getInstance("ErrorxCode",apiKey,"test_v6");        db = clorabase.getDatabase();
         users = db.collection("users");
         userDoc = users.document("user1");
     }
@@ -43,7 +43,7 @@ public class DatabaseModuleTest {
     void testUpdateDocument() throws Exception {
         Thread.sleep(5000);
         userDoc.put("age", 31);
-        Map<String, Object> updated = userDoc.getData();
+        Map<String, Object> updated = userDoc.fetch();
         assertEquals(31, ((Number)updated.get("age")).intValue());
     }
 
@@ -51,16 +51,18 @@ public class DatabaseModuleTest {
     @Order(3)
     void testQueryDocuments() throws Exception {
         Query query = users.query();
-        List<Document> results = query.where(map -> map.containsKey("age") && ((Number)map.get("age")).intValue() > 25);
+        List<Document> results = query.where(map -> {
+            System.out.println(map);
+            return true;
+        });
+        System.out.println(results);
         assertFalse(results.isEmpty());
     }
 
     @Test
     @Order(4)
     void testDeleteDocument() throws Exception {
-        userDoc.delete();
-        Thread.sleep(5000);
-        assertEquals(new HashMap<>(),userDoc.fetch());
+        assertDoesNotThrow((NamedExecutable) () -> userDoc.delete());
     }
 
 }

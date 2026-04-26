@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import clorabase.sdk.java.utils.GithubFile;
@@ -22,22 +23,20 @@ public class Collection {
     protected final Collection parent;
     protected final ExecutorService executor = Executors.newCachedThreadPool();
     protected final String path;
-    protected final String base;
     protected final String name;
+    protected final String basePath;
 
     /**
      * Creates a new collection with the given parent, path and name. MUST not used directly
      * as it is used internally by the SDK.
      *
      * @param parent The parent collection of this collection.
-     * @param path   The path of the collection in the database.
-     * @param base  The base path of the database (usually "projectName/db/").
      */
-    public Collection(Collection parent, String base, String path) {
+    public Collection(Collection parent, String name, String basePath) {
+        this.basePath = basePath;
         this.parent = parent;
-        this.base = base;
-        this.path = path;
-        this.name = path.substring(path.lastIndexOf("/") + 1); // get the name from the path
+        this.path = parent == null ? name : parent.path + "/" + name;
+        this.name = name;
     }
 
     public String getPath() {
@@ -61,7 +60,7 @@ public class Collection {
             throw new IllegalArgumentException("Invalid collection name, can only include alphabet and numbers");
         }
 
-        return new Collection(this,base,path + "/"+ name);
+        return new Collection(this,name,basePath);
     }
 
     /**
@@ -80,7 +79,12 @@ public class Collection {
         if (path.endsWith("/"))
             path = path.substring(0, path.length() - 1);
 
-        return new Collection(this, base, this.path + path);
+        var collections = path.split("/");
+        Collection current = this;
+        for (String collection : collections) {
+            current = current.collection(collection);
+        }
+        return current;
     }
 
     /**
@@ -94,7 +98,7 @@ public class Collection {
         if (name.contains("/") || name.contains(" ") || name.contains(".") || name.isEmpty()) {
             throw new IllegalArgumentException(name + " : " + "Invalid document name, can only include alphabet and numbers");
         }
-        return new Document(base,path + "/" + name + ".doc");
+        return new Document(this,name);
     }
 
     /**
@@ -109,6 +113,7 @@ public class Collection {
 
         if (path.startsWith("/"))
             path = path.substring(1);
+
         if (path.endsWith("/"))
             path = path.substring(0, path.length() - 1);
 
@@ -116,7 +121,7 @@ public class Collection {
             return document(path.replace(".doc", ""));
 
         var finalPath = this.path + "/" + path;
-        return new Document(base,finalPath);
+        return Document.fromPath(this,finalPath);
     }
 
     /**
@@ -125,15 +130,13 @@ public class Collection {
      */
     public List<Document> getDocuments() throws ClorastoreException {
         try {
-            return GithubUtils.listFiles(base + path).stream()
-                    .filter(GithubFile::isFile)
-                    .map(s -> new Document(base,path  + "/" + s.getName()))
+            return GithubUtils.listFiles(basePath + path).stream()
+                    .filter(githubFile -> githubFile.isFile() && !githubFile.getName().equals("index"))
+                    .map(s -> new Document(this,s.getName().replace(".doc","")))
                     .collect(Collectors.toList());
         } catch (IOException e) {
-            if (e instanceof FileNotFoundException)
-                throw new ClorastoreException("Collection does not exist.", Reason.NOT_EXISTS);
-            else
-                throw new ClorastoreException("Failed to get documents in collection.", Reason.UNKNOWN);
+            ClorastoreException.handle(e, "Collection does not exist.", "Failed to get documents in collection.");
+            return null; // Unreachable
         }
     }
 
@@ -143,16 +146,14 @@ public class Collection {
      */
     public List<String> getCollections() throws ClorastoreException {
         try {
-            return GithubUtils.listFiles(base + path)
+            return GithubUtils.listFiles(basePath + path)
                     .stream()
                     .filter(it -> !it.isFile())
                     .map(GithubFile::getName)
                     .collect(Collectors.toList());
         } catch (IOException e) {
-            if (e instanceof FileNotFoundException)
-                throw new ClorastoreException("Collection does not exist.", Reason.NOT_EXISTS);
-            else
-                throw new ClorastoreException("Failed to get collections in collection.", Reason.UNKNOWN);
+            ClorastoreException.handle(e, "Collection does not exist.", "Failed to get collections in collection.");
+            return null; // Unreachable
         }
     }
 
@@ -163,12 +164,9 @@ public class Collection {
      */
     public void delete(String name) throws ClorastoreException {
         try {
-            GithubUtils.delete(base + path + "/" + name + ".doc");
+            GithubUtils.delete(basePath + path + "/" + name + ".doc");
         } catch (IOException e) {
-            if (e instanceof FileNotFoundException)
-                throw new ClorastoreException("Document with name '" + name + "' does not exist.",e);
-            else
-                throw new ClorastoreException("Failed to delete document with name '" + name + "'.", Reason.UNKNOWN);
+            ClorastoreException.handle(e, "Document with name '" + name + "' does not exist.", "Failed to delete document with name '" + name + "'.");
         }
     }
 
@@ -198,4 +196,3 @@ public class Collection {
                 '}';
     }
 }
-
