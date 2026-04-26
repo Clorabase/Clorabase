@@ -1,0 +1,53 @@
+plugins {
+    alias(libs.plugins.android.application)
+    alias(libs.plugins.kotlin.compose)
+}
+
+android {
+    namespace 'com.clorabase.console'
+    compileSdk 36
+    useLibrary 'org.apache.http.legacy'
+
+    defaultConfig {
+        applicationId "com.clorabase.console"
+        minSdk 29
+        targetSdk 35
+        versionCode 5
+        versionName "0.5"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_21
+        targetCompatibility JavaVersion.VERSION_21
+    }
+    buildFeatures {
+        compose true
+    }
+}
+
+
+dependencies {
+    implementation libs.activity.compose
+    implementation platform(libs.compose.bom)
+    implementation libs.ui
+    implementation libs.ui.graphics
+    implementation libs.material3
+    implementation 'commons-io:commons-io:2.16.1'
+    implementation project(':Clorabase4J')
+    implementation libs.github.api
+    implementation(libs.androidx.navigation3.runtime)
+    implementation(libs.androidx.navigation3.ui)
+    implementation(libs.androidx.lifecycle.viewmodel.navigation3)
+    implementation libs.androidx.lifecycle.viewmodel.compose
+    implementation libs.androidx.core.ktx
+    androidTestImplementation platform(libs.compose.bom)
+    androidTestImplementation libs.ui.test.junit4
+    debugImplementation libs.ui.tooling.preview
+    debugImplementation(libs.androidx.ui.tooling)
+}
