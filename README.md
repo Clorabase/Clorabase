@@ -172,15 +172,18 @@ Clorabase requires a **GitHub Personal Access Token (PAT)**:
 
 | Feature | Clorabase | Firebase |
 | --- | --- | --- |
-| **Primary Use Case** | Small, non-commercial Android apps, hobby projects, proof-of-concepts | Professional, scalable, cross-platform apps |
-| **Cost** | 100% Free (GitHub limits) | Tiered / Pay-as-you-go |
-| **Data Ownership** | You own the GitHub repo | Stored on Google Servers |
+| **Use Case** | Small, non-commercial Android apps, hobby projects, proof-of-concepts | Professional, scalable, cross-platform apps |
+| **Cost** | 100% Free | Tiered / Pay-as-you-go |
+| **Data Ownership** | Stored on your GitHub repo | Stored on Google Servers |
 | **Setup Complexity** | Very Low | Moderate to High |
-| **Database Type** | JSON-based (Encrypted) | NoSQL (Firestore / Realtime) |
-| **Large File Support** | GitHub Release Assets | Firebase Storage |
-| **In-App Messages** | GitHub JSON configuration | Firebase In-App Messaging |
-| **Scalability** | Limited, best for small-scale apps | Highly scalable, millions of users |
+| **Database Type** | NoSQL | NoSQL |
+| **Storage support** | Samll file and Large file | Unified single storage |
+| **In-App Messages** | Supported (Simple) | Supported (Customizable) |
+| **In-app update**   | Supported | Absent   |
+| **Authentication**  | Absent | Supported |
 | **Core Services** | Database, Storage, Messaging, Updates | Database, Auth, Hosting, ML, Analytics, Functions |
+| **Scalability** | Limited, best for small-scale apps | Highly scalable, millions of users |
+
 
 
 ### ✅ Choose Clorabase when...
