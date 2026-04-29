@@ -159,7 +159,6 @@ Clorabase requires a **GitHub Personal Access Token (PAT)**:
 2.  Click **Generate new token**.
 3.  Select scopes:
     -   `repo` (full control of private repositories)
-    -   `workflow`
 4.  Copy and store the token securely — it’s required for SDK initialization.
 
 ⚠️ **Note:** Never publish your token in public repos. If exposed, GitHub will revoke it automatically.
