@@ -148,7 +148,7 @@ imagesDir.uploadFile(inputStream, "avatar.png", new ProgressListener() {
 });
 ```
 
-#### For detailed user guide, visit our [documentation]()
+#### For detailed user guide, visit our [documentation](https://mintlify.wiki/Clorabase/Clorabase/)
 
 
 ## 🔑 Generating GitHub Token
