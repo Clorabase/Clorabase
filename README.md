@@ -85,7 +85,7 @@ implementation 'com.github.Clorabase.Clorabase:Clorabase4A:0.6'
 -   For Java SDK:
 
 ```gradle
-implementation 'com.github.Clorabase.Clorabase:Clorabase4j:0.6'
+implementation 'com.github.Clorabase.Clorabase:Clorabase4J:0.6'
 ```
 
 
